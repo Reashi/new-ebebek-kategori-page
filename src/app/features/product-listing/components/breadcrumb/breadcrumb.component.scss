@@ -1,209 +1,173 @@
-/* src/app/features/product-listing/components/breadcrumb/breadcrumb.component.scss */
+// src/app/features/product-listing/components/breadcrumb/breadcrumb.component.scss
 
-.breadcrumb-nav {
-  padding: 15px 20px;
+.breadcrumb-container {
   background: white;
   border-bottom: 1px solid #e1e8ed;
-  font-family: 'Inter', sans-serif;
-}
-
-.breadcrumb-list {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
   padding: 0;
-  list-style: none;
-  font-size: 0.9em;
-  max-width: 1400px;
-  margin: 0 auto;
-  flex-wrap: wrap;
-}
 
-.breadcrumb-item {
-  display: flex;
-  align-items: center;
-}
-
-.breadcrumb-link {
-  color: #3498db;
-  text-decoration: none;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-weight: 500;
-
-  &:hover {
-    background: #ecf0f1;
-    color: #2980b9;
-    transform: translateY(-1px);
+  .breadcrumb-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
   }
 
-  &:focus {
-    outline: 2px solid #3498db;
-    outline-offset: 2px;
-    background: #ecf0f1;
+  .breadcrumb {
+    .breadcrumb-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9em;
+
+      &.active {
+        .breadcrumb-text {
+          color: #2c3e50;
+          font-weight: 500;
+        }
+      }
+
+      .breadcrumb-link {
+        color: #7f8c8d;
+        text-decoration: none;
+        transition: color 0.3s;
+        
+        &:hover {
+          color: #3498db;
+          text-decoration: underline;
+        }
+      }
+
+      .breadcrumb-text {
+        color: #7f8c8d;
+      }
+
+      .breadcrumb-separator {
+        display: flex;
+        align-items: center;
+        margin: 0 4px;
+        
+        svg {
+          opacity: 0.6;
+        }
+      }
+    }
   }
 
-  &:active {
-    transform: translateY(0);
+  .page-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.9em;
+
+    .result-count {
+      color: #7f8c8d;
+      font-weight: 400;
+    }
+
+    .category-name {
+      color: #2c3e50;
+      font-weight: 600;
+      background: #e3f2fd;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+    }
   }
 }
 
-.home-icon,
-.breadcrumb-icon {
-  font-size: 1em;
-  transition: transform 0.3s ease;
-}
-
-.breadcrumb-link:hover .home-icon,
-.breadcrumb-link:hover .breadcrumb-icon {
-  transform: scale(1.1);
-}
-
-.breadcrumb-separator {
-  color: #bdc3c7;
-  font-weight: 300;
-  user-select: none;
-  font-size: 1.1em;
-}
-
-.breadcrumb-current {
-  color: #2c3e50;
-  font-weight: 600;
-  padding: 4px 8px;
-  background: #f8f9fa;
-  border-radius: 6px;
-}
-
-.current {
-  pointer-events: none;
-}
-
-/* Responsive Design */
+// Responsive Design
 @media (max-width: 768px) {
-  .breadcrumb-nav {
-    padding: 12px 15px;
-  }
+  .breadcrumb-container {
+    .breadcrumb-content {
+      padding: 12px 15px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
 
-  .breadcrumb-list {
-    font-size: 0.85em;
-    gap: 6px;
-  }
+    .breadcrumb {
+      .breadcrumb-item {
+        font-size: 0.85em;
+      }
+    }
 
-  .breadcrumb-link {
-    padding: 3px 6px;
-  }
+    .page-info {
+      width: 100%;
+      justify-content: space-between;
+      font-size: 0.85em;
 
-  .breadcrumb-current {
-    padding: 3px 6px;
+      .category-name {
+        font-size: 0.8em;
+        padding: 3px 10px;
+      }
+    }
   }
 }
 
 @media (max-width: 480px) {
-  .breadcrumb-nav {
-    padding: 10px 15px;
-  }
+  .breadcrumb-container {
+    .breadcrumb-content {
+      padding: 10px 10px;
+    }
 
-  .breadcrumb-list {
-    font-size: 0.8em;
-    gap: 4px;
-  }
+    .breadcrumb {
+      .breadcrumb-list {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
 
-  // Mobilde bazı breadcrumb itemları gizlenebilir
-  .breadcrumb-item:not(:first-child):not(:last-child) {
-    display: none;
-  }
+      .breadcrumb-item {
+        font-size: 0.8em;
+        
+        .breadcrumb-separator {
+          margin: 0 2px;
+          
+          svg {
+            width: 5px;
+            height: 8px;
+          }
+        }
+      }
+    }
 
-  .breadcrumb-item:nth-last-child(2) {
-    display: flex;
-    
-    &::before {
-      content: '...';
-      color: #bdc3c7;
-      margin-right: 8px;
+    .page-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.8em;
+
+      .category-name {
+        align-self: flex-start;
+      }
     }
   }
 }
 
-/* Dark mode support (gelecekte) */
-@media (prefers-color-scheme: dark) {
-  .breadcrumb-nav {
-    background: #2c3e50;
-    border-bottom-color: #34495e;
-  }
-
-  .breadcrumb-link {
-    color: #74b9ff;
-
-    &:hover {
-      background: #34495e;
-      color: #0984e3;
-    }
-  }
-
-  .breadcrumb-current {
-    color: #ecf0f1;
-    background: #34495e;
-  }
-
-  .breadcrumb-separator {
-    color: #7f8c8d;
-  }
+// Animation
+.breadcrumb-container {
+  animation: slideDown 0.3s ease;
 }
 
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .breadcrumb-link {
-    border: 1px solid transparent;
-
-    &:focus,
-    &:hover {
-      border-color: currentColor;
-    }
-  }
-
-  .breadcrumb-current {
-    border: 1px solid #2c3e50;
-  }
-}
-
-/* Accessibility improvements */
-.breadcrumb-link {
-  &::before {
-    content: '';
-    position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    bottom: -4px;
-    border-radius: 8px;
+@keyframes slideDown {
+  from {
     opacity: 0;
-    background: rgba(52, 152, 219, 0.1);
-    transition: opacity 0.3s ease;
+    transform: translateY(-10px);
   }
-
-  &:focus::before {
+  to {
     opacity: 1;
-  }
-}
-
-/* Print styles */
-@media print {
-  .breadcrumb-nav {
-    background: none;
-    border-bottom: 1px solid #ccc;
-  }
-
-  .breadcrumb-link {
-    color: #000;
-    text-decoration: underline;
-  }
-
-  .breadcrumb-icon {
-    display: none;
+    transform: translateY(0);
   }
 }

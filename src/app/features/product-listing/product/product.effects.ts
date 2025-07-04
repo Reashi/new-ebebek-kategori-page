@@ -1,4 +1,4 @@
-// src/app/features/product-listing/store/product.effects.ts
+// src/app/features/product-listing/product/product.effects.ts
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
@@ -34,6 +34,29 @@ export class ProductEffects {
       )
     )
   );
+
+  // Load filter options effect - eğer loadFilterOptions action'ı varsa
+  // Şimdilik bu effect'i kapatıyoruz çünkü action tanımlanmamış olabilir
+  /*
+  loadFilterOptions$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ProductActions.loadFilterOptions),
+      switchMap(() =>
+        this.productService.getFilterOptions().pipe(
+          map((filterOptions) => 
+            ProductActions.loadFilterOptionsSuccess({ filterOptions })
+          ),
+          catchError((error) => {
+            console.error('Load filter options error:', error);
+            return of(ProductActions.loadFilterOptionsFailure({ 
+              error: error.message || 'Filtre seçenekleri yüklenirken bir hata oluştu' 
+            }));
+          })
+        )
+      )
+    )
+  );
+  */
 
   // Select product effect
   selectProduct$ = createEffect(() =>

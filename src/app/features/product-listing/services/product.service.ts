@@ -69,6 +69,26 @@ export class ProductService {
         httpParams = httpParams.set('search', filters.searchTerm);
       }
       
+      if (filters.brandIds && filters.brandIds.length > 0) {
+        httpParams = httpParams.set('brands', filters.brandIds.join(','));
+      }
+      
+      if (filters.sizes && filters.sizes.length > 0) {
+        httpParams = httpParams.set('sizes', filters.sizes.join(','));
+      }
+      
+      if (filters.genders && filters.genders.length > 0) {
+        httpParams = httpParams.set('genders', filters.genders.join(','));
+      }
+      
+      if (filters.colors && filters.colors.length > 0) {
+        httpParams = httpParams.set('colors', filters.colors.join(','));
+      }
+      
+      if (filters.ratings && filters.ratings.length > 0) {
+        httpParams = httpParams.set('ratings', filters.ratings.join(','));
+      }
+      
       if (filters.priceRange) {
         httpParams = httpParams.set('minPrice', filters.priceRange.min.toString());
         httpParams = httpParams.set('maxPrice', filters.priceRange.max.toString());
@@ -76,6 +96,10 @@ export class ProductService {
       
       if (filters.inStockOnly) {
         httpParams = httpParams.set('inStock', 'true');
+      }
+      
+      if (filters.onSaleOnly) {
+        httpParams = httpParams.set('onSale', 'true');
       }
     }
 
@@ -89,10 +113,18 @@ export class ProductService {
         id: '1',
         name: 'Bebek Arabası Premium Comfort',
         price: 1299.99,
+        originalPrice: 1599.99,
         description: 'Konforlu ve güvenli bebek arabası',
         imageUrl: '',
         categoryId: 'strollers',
+        brandId: 'chicco',
         inStock: true,
+        rating: 4.5,
+        reviewCount: 120,
+        colors: ['siyah', 'gri'],
+        sizes: ['0-3-ay', '3-6-ay'],
+        gender: 'unisex',
+        isOnSale: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -103,7 +135,14 @@ export class ProductService {
         description: 'Doğal ve organik bebek maması',
         imageUrl: '',
         categoryId: 'food',
+        brandId: 'johnson',
         inStock: true,
+        rating: 4.8,
+        reviewCount: 89,
+        colors: ['krem'],
+        sizes: ['6-12-ay'],
+        gender: 'unisex',
+        isOnSale: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -111,10 +150,18 @@ export class ProductService {
         id: '3',
         name: 'Eğitici Bebek Oyuncağı Set',
         price: 89.99,
+        originalPrice: 129.99,
         description: 'Eğitici ve eğlenceli oyuncak seti',
         imageUrl: '',
         categoryId: 'toys',
+        brandId: 'bebeto',
         inStock: false,
+        rating: 4.2,
+        reviewCount: 65,
+        colors: ['kirmizi', 'mavi', 'yesil'],
+        sizes: ['12-18-ay', '18-24-ay'],
+        gender: 'erkek',
+        isOnSale: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -125,7 +172,14 @@ export class ProductService {
         description: 'Ergonomik emzirme yastığı',
         imageUrl: '',
         categoryId: 'feeding',
+        brandId: 'philips-avent',
         inStock: true,
+        rating: 4.6,
+        reviewCount: 156,
+        colors: ['pembe', 'mavi'],
+        sizes: ['0-3-ay'],
+        gender: 'kız',
+        isOnSale: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -136,7 +190,14 @@ export class ProductService {
         description: 'WiFi destekli bebek monitörü',
         imageUrl: '',
         categoryId: 'safety',
+        brandId: 'mama-papa',
         inStock: true,
+        rating: 4.4,
+        reviewCount: 78,
+        colors: ['beyaz', 'siyah'],
+        sizes: ['genel'],
+        gender: 'unisex',
+        isOnSale: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -144,10 +205,18 @@ export class ProductService {
         id: '6',
         name: 'Organik Bebek Şampuanı',
         price: 25.99,
+        originalPrice: 35.99,
         description: 'Doğal içerikli bebek şampuanı',
         imageUrl: '',
         categoryId: 'care',
+        brandId: 'johnson',
         inStock: true,
+        rating: 4.7,
+        reviewCount: 234,
+        colors: ['sari'],
+        sizes: ['genel'],
+        gender: 'unisex',
+        isOnSale: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -158,7 +227,14 @@ export class ProductService {
         description: 'ECE sertifikalı güvenli oto koltuğu',
         imageUrl: '',
         categoryId: 'car-seats',
+        brandId: 'chicco',
         inStock: false,
+        rating: 4.9,
+        reviewCount: 445,
+        colors: ['siyah', 'gri', 'lacivert'],
+        sizes: ['0-3-ay', '3-6-ay', '6-12-ay'],
+        gender: 'unisex',
+        isOnSale: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -169,7 +245,14 @@ export class ProductService {
         description: 'Yumuşak ve güvenli peluş oyuncak',
         imageUrl: '',
         categoryId: 'toys',
+        brandId: 'nuby',
         inStock: true,
+        rating: 4.3,
+        reviewCount: 189,
+        colors: ['kahverengi', 'pembe', 'mavi'],
+        sizes: ['12-18-ay', '18-24-ay', '2-3-yas'],
+        gender: 'kız',
+        isOnSale: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -177,10 +260,18 @@ export class ProductService {
         id: '9',
         name: 'Bebek Bezi Paketi (64 Adet)',
         price: 85.99,
+        originalPrice: 99.99,
         description: 'Ultra emici bebek bezleri',
         imageUrl: '',
         categoryId: 'diapers',
+        brandId: 'bebeto',
         inStock: true,
+        rating: 4.1,
+        reviewCount: 567,
+        colors: ['beyaz'],
+        sizes: ['3-6-ay', '6-12-ay'],
+        gender: 'unisex',
+        isOnSale: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -191,7 +282,14 @@ export class ProductService {
         description: 'Ergonomik tasarım banyo küveti',
         imageUrl: '',
         categoryId: 'bath',
+        brandId: 'tommee-tippee',
         inStock: true,
+        rating: 4.5,
+        reviewCount: 134,
+        colors: ['mavi', 'pembe', 'yesil'],
+        sizes: ['0-3-ay', '3-6-ay'],
+        gender: 'unisex',
+        isOnSale: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -199,10 +297,18 @@ export class ProductService {
         id: '11',
         name: 'Bebek Mama Sandalyesi',
         price: 180.75,
+        originalPrice: 220.75,
         description: 'Ayarlanabilir mama sandalyesi',
         imageUrl: '',
         categoryId: 'feeding',
+        brandId: 'chicco',
         inStock: false,
+        rating: 4.6,
+        reviewCount: 298,
+        colors: ['gri', 'turkuaz'],
+        sizes: ['6-12-ay', '12-18-ay', '18-24-ay'],
+        gender: 'unisex',
+        isOnSale: true,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -213,7 +319,71 @@ export class ProductService {
         description: 'Rahat ve güvenli uyku tulumu',
         imageUrl: '',
         categoryId: 'sleep',
+        brandId: 'mam',
         inStock: true,
+        rating: 4.4,
+        reviewCount: 89,
+        colors: ['mor', 'pastel-mavi', 'krem'],
+        sizes: ['0-3-ay', '3-6-ay', '6-12-ay'],
+        gender: 'kız',
+        isOnSale: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      // Daha fazla mock data
+      {
+        id: '13',
+        name: 'Erkek Bebek Tişört Seti',
+        price: 75.99,
+        originalPrice: 89.99,
+        description: '3\'lü erkek bebek tişört seti',
+        imageUrl: '',
+        categoryId: 'toys',
+        brandId: 'bebeto',
+        inStock: true,
+        rating: 4.2,
+        reviewCount: 45,
+        colors: ['mavi', 'yesil', 'turuncu'],
+        sizes: ['6-12-ay', '12-18-ay'],
+        gender: 'erkek',
+        isOnSale: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: '14',
+        name: 'Kız Bebek Elbise',
+        price: 55.50,
+        description: 'Şık kız bebek elbise',
+        imageUrl: '',
+        categoryId: 'toys',
+        brandId: 'mama-papa',
+        inStock: true,
+        rating: 4.8,
+        reviewCount: 67,
+        colors: ['pembe', 'mor', 'gold'],
+        sizes: ['12-18-ay', '18-24-ay', '2-3-yas'],
+        gender: 'kız',
+        isOnSale: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: '15',
+        name: 'Antibakteriyel Islak Mendil',
+        price: 15.99,
+        originalPrice: 19.99,
+        description: 'Hassas ciltler için antibakteriyel mendil',
+        imageUrl: '',
+        categoryId: 'diapers',
+        brandId: 'johnson',
+        inStock: true,
+        rating: 4.3,
+        reviewCount: 789,
+        colors: ['beyaz'],
+        sizes: ['genel'],
+        gender: 'unisex',
+        isOnSale: true,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -227,6 +397,34 @@ export class ProductService {
       
       if (filters.categoryId) {
         filteredProducts = filteredProducts.filter(p => p.categoryId === filters.categoryId);
+      }
+      
+      if (filters.brandIds && filters.brandIds.length > 0) {
+        filteredProducts = filteredProducts.filter(p => filters.brandIds!.includes(p.brandId));
+      }
+      
+      if (filters.sizes && filters.sizes.length > 0) {
+        filteredProducts = filteredProducts.filter(p => 
+          p.sizes && p.sizes.some(size => filters.sizes!.includes(size))
+        );
+      }
+      
+      if (filters.genders && filters.genders.length > 0) {
+        filteredProducts = filteredProducts.filter(p => 
+          p.gender && filters.genders!.includes(p.gender)
+        );
+      }
+      
+      if (filters.colors && filters.colors.length > 0) {
+        filteredProducts = filteredProducts.filter(p => 
+          p.colors && p.colors.some(color => filters.colors!.includes(color))
+        );
+      }
+      
+      if (filters.ratings && filters.ratings.length > 0) {
+        filteredProducts = filteredProducts.filter(p => 
+          p.rating && filters.ratings!.some(rating => p.rating! >= rating)
+        );
       }
       
       if (filters.searchTerm) {
@@ -245,6 +443,10 @@ export class ProductService {
       
       if (filters.inStockOnly) {
         filteredProducts = filteredProducts.filter(p => p.inStock);
+      }
+      
+      if (filters.onSaleOnly) {
+        filteredProducts = filteredProducts.filter(p => p.isOnSale);
       }
     }
 
@@ -274,7 +476,14 @@ export class ProductService {
       description: `Ürün ${id} detaylı açıklaması`,
       imageUrl: `https://via.placeholder.com/300x200?text=Ürün+${id}`,
       categoryId: 'general',
+      brandId: 'chicco',
       inStock: true,
+      rating: 4.0,
+      reviewCount: 25,
+      colors: ['mavi'],
+      sizes: ['genel'],
+      gender: 'unisex',
+      isOnSale: false,
       createdAt: new Date(),
       updatedAt: new Date()
     };

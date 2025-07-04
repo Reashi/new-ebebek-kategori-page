@@ -4,9 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil, startWith } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
 
-import { ProductFilters, FilterOptions, Brand, Category, Size, Color } from '../../product/product.model';
+import { ProductFilters, Category, Brand, FilterOption, ColorOption } from '../../product/product.model';
 import * as ProductActions from '../../product/product.actions';
 import * as ProductSelectors from '../../product/product.selectors';
 
@@ -15,56 +15,112 @@ import * as ProductSelectors from '../../product/product.selectors';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './filter-sidebar.component.html',
-  styleUrl: './filter-sidebar.component.scss'
+  styleUrls: ['./filter-sidebar.component.scss']
 })
 export class FilterSidebarComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Observables - FIX: Added startWith to provide default empty arrays
-  categories$: Observable<Category[]>;
-  brands$: Observable<Brand[]>;
-  sizes$: Observable<Size[]>;
-  colors$: Observable<Color[]>;
+  // Observables
   filters$: Observable<ProductFilters>;
+  hasActiveFilters$: Observable<boolean>;
 
-  // Local state
+  // Filter data
+  categories: Category[] = [
+    { id: 'strollers', name: 'Bebek Arabaları' },
+    { id: 'food', name: 'Mama & Beslenme' },
+    { id: 'toys', name: 'Oyuncaklar' },
+    { id: 'feeding', name: 'Emzirme & Beslenme' },
+    { id: 'safety', name: 'Güvenlik' },
+    { id: 'care', name: 'Bakım & Hijyen' },
+    { id: 'car-seats', name: 'Oto Koltuğu' },
+    { id: 'diapers', name: 'Bez & Islak Mendil' },
+    { id: 'bath', name: 'Banyo' },
+    { id: 'sleep', name: 'Uyku' }
+  ];
+
+  brands: Brand[] = [
+    { id: 'chicco', name: 'Chicco', productCount: 45 },
+    { id: 'bebeto', name: 'Bebeto', productCount: 32 },
+    { id: 'mama-papa', name: 'Mama Papa', productCount: 28 },
+    { id: 'johnson', name: 'Johnson\'s', productCount: 23 },
+    { id: 'philips-avent', name: 'Philips Avent', productCount: 19 },
+    { id: 'tommee-tippee', name: 'Tommee Tippee', productCount: 15 },
+    { id: 'nuby', name: 'Nuby', productCount: 12 },
+    { id: 'mam', name: 'MAM', productCount: 11 }
+  ];
+
+  sizes: FilterOption[] = [
+    { id: '0-3-ay', name: '0-3 Ay', count: 25 },
+    { id: '3-6-ay', name: '3-6 Ay', count: 30 },
+    { id: '6-12-ay', name: '6-12 Ay', count: 35 },
+    { id: '12-18-ay', name: '12-18 Ay', count: 28 },
+    { id: '18-24-ay', name: '18-24 Ay', count: 20 },
+    { id: '2-3-yas', name: '2-3 Yaş', count: 18 }
+  ];
+
+  genders: FilterOption[] = [
+    { id: 'erkek', name: 'Erkek', count: 45 },
+    { id: 'kız', name: 'Kız', count: 42 },
+    { id: 'unisex', name: 'Unisex', count: 38 }
+  ];
+
+  colors: ColorOption[] = [
+    { id: 'kirmizi', name: 'Kırmızı', hexCode: '#e74c3c' },
+    { id: 'mavi', name: 'Mavi', hexCode: '#3498db' },
+    { id: 'yesil', name: 'Yeşil', hexCode: '#27ae60' },
+    { id: 'sari', name: 'Sarı', hexCode: '#f1c40f' },
+    { id: 'pembe', name: 'Pembe', hexCode: '#e91e63' },
+    { id: 'mor', name: 'Mor', hexCode: '#9b59b6' },
+    { id: 'turuncu', name: 'Turuncu', hexCode: '#e67e22' },
+    { id: 'kahverengi', name: 'Kahverengi', hexCode: '#8d6e63' },
+    { id: 'gri', name: 'Gri', hexCode: '#95a5a6' },
+    { id: 'siyah', name: 'Siyah', hexCode: '#2c3e50' },
+    { id: 'beyaz', name: 'Beyaz', hexCode: '#ecf0f1' },
+    { id: 'lacivert', name: 'Lacivert', hexCode: '#2c3e50' },
+    { id: 'bordo', name: 'Bordo', hexCode: '#8e44ad' },
+    { id: 'turkuaz', name: 'Turkuaz', hexCode: '#1abc9c' },
+    { id: 'krem', name: 'Krem', hexCode: '#f5f5dc' },
+    { id: 'gold', name: 'Gold', hexCode: '#ffd700' },
+    { id: 'gumush', name: 'Gümüş', hexCode: '#c0c0c0' },
+    { id: 'pastel-mavi', name: 'Pastel Mavi', hexCode: '#add8e6' }
+  ];
+
+  priceRanges = [
+    { min: 0, max: 50, label: '0-50 TL' },
+    { min: 50, max: 100, label: '50-100 TL' },
+    { min: 100, max: 250, label: '100-250 TL' },
+    { min: 250, max: 500, label: '250-500 TL' },
+    { min: 500, max: 1000, label: '500-1000 TL' },
+    { min: 1000, max: 999999, label: '1000+ TL' }
+  ];
+
+  ratingOptions = [
+    { value: 4, count: 25 },
+    { value: 3, count: 45 },
+    { value: 2, count: 15 },
+    { value: 1, count: 8 }
+  ];
+
+  // Form data
   selectedCategoryId = '';
-  selectedBrands: string[] = [];
-  selectedSizes: string[] = [];
-  selectedGenders: ('male' | 'female' | 'unisex')[] = [];
-  selectedColors: string[] = [];
-  selectedRatings: number[] = [];
+  brandSearchTerm = '';
   minPrice: number | null = null;
   maxPrice: number | null = null;
-  inStockOnly = false;
   onSaleOnly = false;
+  inStockOnly = false;
+
+  // Current filters
+  private currentFilters: ProductFilters = {};
 
   constructor(private store: Store) {
-    // Observable selectors with default values
-    this.categories$ = this.store.select(ProductSelectors.selectCategories).pipe(
-      startWith([])
-    );
-    this.brands$ = this.store.select(ProductSelectors.selectBrands).pipe(
-      startWith([])
-    );
-    this.sizes$ = this.store.select(ProductSelectors.selectSizes).pipe(
-      startWith([])
-    );
-    this.colors$ = this.store.select(ProductSelectors.selectColors).pipe(
-      startWith([])
-    );
-    this.filters$ = this.store.select(ProductSelectors.selectProductFilters).pipe(
-      startWith({})
-    );
+    this.filters$ = this.store.select(ProductSelectors.selectProductFilters);
+    this.hasActiveFilters$ = this.store.select(ProductSelectors.selectHasActiveFilters);
   }
 
   ngOnInit() {
-    // Load filter options when component initializes
-    this.store.dispatch(ProductActions.loadFilterOptions());
-
-    // Subscribe to current filters to sync local state
     this.filters$.pipe(takeUntil(this.destroy$)).subscribe(filters => {
-      this.syncLocalStateWithFilters(filters);
+      this.currentFilters = filters;
+      this.updateFormFromFilters(filters);
     });
   }
 
@@ -73,205 +129,162 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // Computed properties
-  get hasActiveFilters(): boolean {
-    return !!(
-      this.selectedCategoryId ||
-      this.selectedBrands.length > 0 ||
-      this.selectedSizes.length > 0 ||
-      this.selectedGenders.length > 0 ||
-      this.selectedColors.length > 0 ||
-      this.selectedRatings.length > 0 ||
-      this.minPrice !== null ||
-      this.maxPrice !== null ||
-      this.inStockOnly ||
-      this.onSaleOnly
+  private updateFormFromFilters(filters: ProductFilters) {
+    this.selectedCategoryId = filters.categoryId || '';
+    this.onSaleOnly = filters.onSaleOnly || false;
+    this.inStockOnly = filters.inStockOnly || false;
+    
+    if (filters.priceRange) {
+      this.minPrice = filters.priceRange.min;
+      this.maxPrice = filters.priceRange.max;
+    } else {
+      this.minPrice = null;
+      this.maxPrice = null;
+    }
+  }
+
+  getFilteredBrands(): Brand[] {
+    if (!this.brandSearchTerm) return this.brands;
+    
+    return this.brands.filter(brand => 
+      brand.name.toLowerCase().includes(this.brandSearchTerm.toLowerCase())
     );
   }
 
-  // Event handlers
+  isSelected(filterType: keyof ProductFilters, value: string | number): boolean {
+    const filterValue = this.currentFilters[filterType];
+    if (Array.isArray(filterValue)) {
+      return filterValue.includes(value as never);
+    }
+    return filterValue === value;
+  }
+
   onCategoryChange() {
-    this.updateFilters({ 
-      categoryId: this.selectedCategoryId || undefined 
-    });
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { categoryId: this.selectedCategoryId || undefined }
+    }));
   }
 
   onBrandChange(brandId: string, event: Event) {
-    const target = event.target as HTMLInputElement;
+    const checked = (event.target as HTMLInputElement).checked;
+    const currentBrands = this.currentFilters.brandIds || [];
     
-    if (target.checked) {
-      this.selectedBrands = [...this.selectedBrands, brandId];
+    let newBrands: string[];
+    if (checked) {
+      newBrands = [...currentBrands, brandId];
     } else {
-      this.selectedBrands = this.selectedBrands.filter(id => id !== brandId);
+      newBrands = currentBrands.filter(id => id !== brandId);
     }
-    
-    this.updateFilters({ 
-      brandIds: this.selectedBrands.length > 0 ? this.selectedBrands : undefined 
-    });
+
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { brandIds: newBrands.length > 0 ? newBrands : undefined }
+    }));
   }
 
   onSizeChange(sizeId: string, event: Event) {
-    const target = event.target as HTMLInputElement;
+    const checked = (event.target as HTMLInputElement).checked;
+    const currentSizes = this.currentFilters.sizes || [];
     
-    if (target.checked) {
-      this.selectedSizes = [...this.selectedSizes, sizeId];
+    let newSizes: string[];
+    if (checked) {
+      newSizes = [...currentSizes, sizeId];
     } else {
-      this.selectedSizes = this.selectedSizes.filter(id => id !== sizeId);
+      newSizes = currentSizes.filter(id => id !== sizeId);
     }
-    
-    this.updateFilters({ 
-      sizeIds: this.selectedSizes.length > 0 ? this.selectedSizes : undefined 
-    });
+
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { sizes: newSizes.length > 0 ? newSizes : undefined }
+    }));
   }
 
-  onGenderChange(gender: 'male' | 'female' | 'unisex', event: Event) {
-    const target = event.target as HTMLInputElement;
+  onGenderChange(genderId: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    const currentGenders = this.currentFilters.genders || [];
     
-    if (target.checked) {
-      this.selectedGenders = [...this.selectedGenders, gender];
+    let newGenders: string[];
+    if (checked) {
+      newGenders = [...currentGenders, genderId];
     } else {
-      this.selectedGenders = this.selectedGenders.filter(g => g !== gender);
+      newGenders = currentGenders.filter(id => id !== genderId);
     }
-    
-    this.updateFilters({ 
-      genders: this.selectedGenders.length > 0 ? this.selectedGenders : undefined 
-    });
+
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { genders: newGenders.length > 0 ? newGenders : undefined }
+    }));
   }
 
-  onColorToggle(colorId: string) {
-    if (this.selectedColors.includes(colorId)) {
-      this.selectedColors = this.selectedColors.filter(id => id !== colorId);
-    } else {
-      this.selectedColors = [...this.selectedColors, colorId];
-    }
+  onColorChange(colorId: string) {
+    const currentColors = this.currentFilters.colors || [];
+    const isSelected = currentColors.includes(colorId);
     
-    this.updateFilters({ 
-      colorIds: this.selectedColors.length > 0 ? this.selectedColors : undefined 
-    });
-  }
+    let newColors: string[];
+    if (isSelected) {
+      newColors = currentColors.filter(id => id !== colorId);
+    } else {
+      newColors = [...currentColors, colorId];
+    }
 
-  onRatingChange(rating: number, event: Event) {
-    const target = event.target as HTMLInputElement;
-    
-    if (target.checked) {
-      this.selectedRatings = [...this.selectedRatings, rating];
-    } else {
-      this.selectedRatings = this.selectedRatings.filter(r => r !== rating);
-    }
-    
-    this.updateFilters({ 
-      ratings: this.selectedRatings.length > 0 ? this.selectedRatings : undefined 
-    });
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { colors: newColors.length > 0 ? newColors : undefined }
+    }));
   }
 
   onPriceChange() {
-    // Debounce logic could be added here if needed
-    const priceRange = (this.minPrice !== null || this.maxPrice !== null) ? {
-      min: this.minPrice || 0,
-      max: this.maxPrice || 10000
-    } : undefined;
-    
-    this.updateFilters({ priceRange });
-  }
-
-  onStockFilterChange() {
-    this.updateFilters({ 
-      inStockOnly: this.inStockOnly || undefined 
-    });
-  }
-
-  onSaleFilterChange() {
-    this.updateFilters({ 
-      onSaleOnly: this.onSaleOnly || undefined 
-    });
-  }
-
-  clearAllFilters() {
-    // Reset all local state
-    this.resetLocalState();
-    
-    // Dispatch clear action
-    this.store.dispatch(ProductActions.clearFilters());
-  }
-
-  // Helper methods
-  private updateFilters(filters: Partial<ProductFilters>) {
-    this.store.dispatch(ProductActions.setFilters({ filters }));
-  }
-
-  private syncLocalStateWithFilters(filters: ProductFilters) {
-    if (!filters) return; // FIX: Guard clause for undefined filters
-    
-    this.selectedCategoryId = filters.categoryId || '';
-    this.selectedBrands = filters.brandIds || [];
-    this.selectedSizes = filters.sizeIds || [];
-    this.selectedGenders = filters.genders || [];
-    this.selectedColors = filters.colorIds || [];
-    this.selectedRatings = filters.ratings || [];
-    this.minPrice = filters.priceRange?.min ?? null;
-    this.maxPrice = filters.priceRange?.max ?? null;
-    this.inStockOnly = filters.inStockOnly || false;
-    this.onSaleOnly = filters.onSaleOnly || false;
-  }
-
-  private resetLocalState() {
-    this.selectedCategoryId = '';
-    this.selectedBrands = [];
-    this.selectedSizes = [];
-    this.selectedGenders = [];
-    this.selectedColors = [];
-    this.selectedRatings = [];
-    this.minPrice = null;
-    this.maxPrice = null;
-    this.inStockOnly = false;
-    this.onSaleOnly = false;
-  }
-
-  // Utility methods for template
-  isColorSelected(colorId: string): boolean {
-    return this.selectedColors.includes(colorId);
-  }
-
-  isBrandSelected(brandId: string): boolean {
-    return this.selectedBrands.includes(brandId);
-  }
-
-  isSizeSelected(sizeId: string): boolean {
-    return this.selectedSizes.includes(sizeId);
-  }
-
-  isGenderSelected(gender: 'male' | 'female' | 'unisex'): boolean {
-    return this.selectedGenders.includes(gender);
-  }
-
-  isRatingSelected(rating: number): boolean {
-    return this.selectedRatings.includes(rating);
-  }
-
-  getSelectedFiltersCount(): number {
-    let count = 0;
-    if (this.selectedCategoryId) count++;
-    if (this.selectedBrands.length > 0) count++;
-    if (this.selectedSizes.length > 0) count++;
-    if (this.selectedGenders.length > 0) count++;
-    if (this.selectedColors.length > 0) count++;
-    if (this.selectedRatings.length > 0) count++;
-    if (this.minPrice !== null || this.maxPrice !== null) count++;
-    if (this.inStockOnly) count++;
-    if (this.onSaleOnly) count++;
-    return count;
-  }
-
-  // Accessibility methods
-  onKeydownColorToggle(event: KeyboardEvent, colorId: string) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      this.onColorToggle(colorId);
+    if (this.minPrice !== null || this.maxPrice !== null) {
+      this.store.dispatch(ProductActions.setFilters({
+        filters: { 
+          priceRange: {
+            min: this.minPrice || 0,
+            max: this.maxPrice || 999999
+          }
+        }
+      }));
+    } else {
+      this.store.dispatch(ProductActions.setFilters({
+        filters: { priceRange: undefined }
+      }));
     }
   }
 
-  getColorAriaLabel(color: Color): string {
-    const isSelected = this.isColorSelected(color.id);
-    return `${color.name} rengi ${isSelected ? 'seçili' : 'seçili değil'}`;
+  setPriceRange(min: number, max: number) {
+    this.minPrice = min;
+    this.maxPrice = max === 999999 ? null : max;
+    this.onPriceChange();
+  }
+
+  onRatingChange(rating: number, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    const currentRatings = this.currentFilters.ratings || [];
+    
+    let newRatings: number[];
+    if (checked) {
+      newRatings = [...currentRatings, rating];
+    } else {
+      newRatings = currentRatings.filter(r => r !== rating);
+    }
+
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { ratings: newRatings.length > 0 ? newRatings : undefined }
+    }));
+  }
+
+  onSaleChange() {
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { onSaleOnly: this.onSaleOnly || undefined }
+    }));
+  }
+
+  onStockChange() {
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { inStockOnly: this.inStockOnly || undefined }
+    }));
+  }
+
+  clearAllFilters() {
+    this.store.dispatch(ProductActions.clearFilters());
+  }
+
+  getStars(rating: number): number[] {
+    return Array.from({ length: 5 }, (_, i) => i + 1);
   }
 }

@@ -1,12 +1,11 @@
-<!-- src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.html -->
 <div class="filter-sidebar">
   <div class="filter-header">
     <h3>Filtreler</h3>
     <button 
       class="clear-all-btn" 
       (click)="clearAllFilters()"
-      [disabled]="!hasActiveFilters">
-      Temizle
+      *ngIf="hasActiveFilters$ | async">
+      Tümünü Temizle
     </button>
   </div>
 
@@ -14,133 +13,103 @@
     <!-- Kategoriler -->
     <div class="filter-section">
       <h4 class="filter-title">Kategoriler</h4>
-      <div class="category-list">
-        <label class="category-item" 
-               *ngFor="let category of categories$ | async"
-               [class.selected]="selectedCategoryId === category.id">
+      <div class="filter-options">
+        <label 
+          *ngFor="let category of categories" 
+          class="radio-option">
           <input 
             type="radio" 
             name="category"
             [value]="category.id"
             [(ngModel)]="selectedCategoryId"
-            (change)="onCategoryChange()"
-            class="category-radio">
-          <span class="category-name">{{ category.name }}</span>
+            (change)="onCategoryChange()">
+          <span class="radio-label">{{ category.name }}</span>
         </label>
       </div>
     </div>
 
     <!-- Markalar -->
     <div class="filter-section">
-      <h4 class="filter-title">
-        Markalar
-        <span class="selected-count" *ngIf="selectedBrands.length > 0">
-          ({{ selectedBrands.length }})
-        </span>
-      </h4>
-      <div class="brand-list">
-        <label class="brand-item" 
-               *ngFor="let brand of brands$ | async"
-               [class.selected]="selectedBrands.includes(brand.id)">
+      <h4 class="filter-title">Markalar</h4>
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Marka ara..."
+          [(ngModel)]="brandSearchTerm"
+          class="search-input">
+      </div>
+      <div class="filter-options scrollable">
+        <label 
+          *ngFor="let brand of getFilteredBrands()" 
+          class="checkbox-option">
           <input 
-            type="checkbox" 
+            type="checkbox"
             [value]="brand.id"
-            [checked]="selectedBrands.includes(brand.id)"
-            (change)="onBrandChange(brand.id, $event)"
-            class="brand-checkbox">
-          <span class="checkmark"></span>
-          <span class="brand-name">{{ brand.name }}</span>
+            [checked]="isSelected('brandIds', brand.id)"
+            (change)="onBrandChange(brand.id, $event)">
+          <span class="checkbox-label">
+            {{ brand.name }}
+            <span class="count" *ngIf="brand.productCount">({{ brand.productCount }})</span>
+          </span>
         </label>
       </div>
     </div>
 
     <!-- Beden -->
     <div class="filter-section">
-      <h4 class="filter-title">
-        Beden
-        <span class="selected-count" *ngIf="selectedSizes.length > 0">
-          ({{ selectedSizes.length }})
-        </span>
-      </h4>
-      <div class="size-list">
-        <label class="size-item" 
-               *ngFor="let size of sizes$ | async"
-               [class.selected]="selectedSizes.includes(size.id)">
+      <h4 class="filter-title">Beden</h4>
+      <div class="filter-options">
+        <label 
+          *ngFor="let size of sizes" 
+          class="checkbox-option">
           <input 
-            type="checkbox" 
+            type="checkbox"
             [value]="size.id"
-            [checked]="selectedSizes.includes(size.id)"
-            (change)="onSizeChange(size.id, $event)"
-            class="size-checkbox">
-          <span class="checkmark"></span>
-          <span class="size-name">{{ size.name }}</span>
+            [checked]="isSelected('sizes', size.id)"
+            (change)="onSizeChange(size.id, $event)">
+          <span class="checkbox-label">
+            {{ size.name }}
+            <span class="count" *ngIf="size.count">({{ size.count }})</span>
+          </span>
         </label>
       </div>
     </div>
 
     <!-- Cinsiyet -->
     <div class="filter-section">
-      <h4 class="filter-title">
-        Cinsiyet
-        <span class="selected-count" *ngIf="selectedGenders.length > 0">
-          ({{ selectedGenders.length }})
-        </span>
-      </h4>
-      <div class="gender-list">
-        <label class="gender-item" 
-               [class.selected]="selectedGenders.includes('male')">
+      <h4 class="filter-title">Cinsiyet</h4>
+      <div class="filter-options">
+        <label 
+          *ngFor="let gender of genders" 
+          class="checkbox-option">
           <input 
-            type="checkbox" 
-            value="male"
-            [checked]="selectedGenders.includes('male')"
-            (change)="onGenderChange('male', $event)"
-            class="gender-checkbox">
-          <span class="checkmark"></span>
-          <span class="gender-name">Erkek</span>
-        </label>
-        <label class="gender-item" 
-               [class.selected]="selectedGenders.includes('female')">
-          <input 
-            type="checkbox" 
-            value="female"
-            [checked]="selectedGenders.includes('female')"
-            (change)="onGenderChange('female', $event)"
-            class="gender-checkbox">
-          <span class="checkmark"></span>
-          <span class="gender-name">Kız</span>
-        </label>
-        <label class="gender-item" 
-               [class.selected]="selectedGenders.includes('unisex')">
-          <input 
-            type="checkbox" 
-            value="unisex"
-            [checked]="selectedGenders.includes('unisex')"
-            (change)="onGenderChange('unisex', $event)"
-            class="gender-checkbox">
-          <span class="checkmark"></span>
-          <span class="gender-name">Unisex</span>
+            type="checkbox"
+            [value]="gender.id"
+            [checked]="isSelected('genders', gender.id)"
+            (change)="onGenderChange(gender.id, $event)">
+          <span class="checkbox-label">
+            {{ gender.name }}
+            <span class="count" *ngIf="gender.count">({{ gender.count }})</span>
+          </span>
         </label>
       </div>
     </div>
 
-    <!-- Renkler -->
+    <!-- Renk -->
     <div class="filter-section">
-      <h4 class="filter-title">
-        Renkler
-        <span class="selected-count" *ngIf="selectedColors.length > 0">
-          ({{ selectedColors.length }})
-        </span>
-      </h4>
+      <h4 class="filter-title">Renk</h4>
       <div class="color-grid">
-        <div class="color-item" 
-             *ngFor="let color of colors$ | async"
-             [class.selected]="selectedColors.includes(color.id)"
-             (click)="onColorToggle(color.id)"
-             [title]="color.name">
-          <div class="color-circle" 
-               [style.background-color]="color.hexCode">
-            <span class="color-check" *ngIf="selectedColors.includes(color.id)">✓</span>
+        <div 
+          *ngFor="let color of colors; let i = index" 
+          class="color-option"
+          [class.selected]="isSelected('colors', color.id)"
+          (click)="onColorChange(color.id)"
+          [title]="color.name">
+          <div 
+            class="color-circle"
+            [style.background-color]="color.hexCode">
           </div>
+          <span class="color-name">{{ color.name }}</span>
         </div>
       </div>
     </div>
@@ -150,110 +119,73 @@
       <h4 class="filter-title">Fiyat Aralığı</h4>
       <div class="price-range">
         <div class="price-inputs">
-          <div class="price-input-group">
-            <label>Min</label>
-            <input 
-              type="number" 
-              [(ngModel)]="minPrice" 
-              (blur)="onPriceChange()"
-              class="price-input"
-              min="0"
-              placeholder="0">
-            <span class="currency">₺</span>
-          </div>
+          <input 
+            type="number" 
+            placeholder="Min"
+            [(ngModel)]="minPrice"
+            (blur)="onPriceChange()"
+            class="price-input">
           <span class="price-separator">-</span>
-          <div class="price-input-group">
-            <label>Max</label>
-            <input 
-              type="number" 
-              [(ngModel)]="maxPrice" 
-              (blur)="onPriceChange()"
-              class="price-input"
-              min="0"
-              placeholder="5000">
-            <span class="currency">₺</span>
-          </div>
+          <input 
+            type="number" 
+            placeholder="Max"
+            [(ngModel)]="maxPrice"
+            (blur)="onPriceChange()"
+            class="price-input">
+        </div>
+        <div class="price-suggestions">
+          <button 
+            *ngFor="let range of priceRanges"
+            class="price-suggestion"
+            (click)="setPriceRange(range.min, range.max)">
+            {{ range.label }}
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Değerlendirmeler -->
     <div class="filter-section">
-      <h4 class="filter-title">
-        Değerlendirmeler
-        <span class="selected-count" *ngIf="selectedRatings.length > 0">
-          ({{ selectedRatings.length }})
-        </span>
-      </h4>
-      <div class="rating-list">
-        <label class="rating-item" 
-               [class.selected]="selectedRatings.includes(5)">
+      <h4 class="filter-title">Değerlendirmeler</h4>
+      <div class="filter-options">
+        <label 
+          *ngFor="let rating of ratingOptions" 
+          class="checkbox-option">
           <input 
-            type="checkbox" 
-            [value]="5"
-            [checked]="selectedRatings.includes(5)"
-            (change)="onRatingChange(5, $event)"
-            class="rating-checkbox">
-          <span class="checkmark"></span>
-          <div class="stars">
-            <span class="star filled">★★★★★</span>
-            <span class="rating-text">(5 Yıldız)</span>
-          </div>
-        </label>
-        <label class="rating-item" 
-               [class.selected]="selectedRatings.includes(4)">
-          <input 
-            type="checkbox" 
-            [value]="4"
-            [checked]="selectedRatings.includes(4)"
-            (change)="onRatingChange(4, $event)"
-            class="rating-checkbox">
-          <span class="checkmark"></span>
-          <div class="stars">
-            <span class="star filled">★★★★</span><span class="star empty">☆</span>
-            <span class="rating-text">(4+ Yıldız)</span>
-          </div>
-        </label>
-        <label class="rating-item" 
-               [class.selected]="selectedRatings.includes(3)">
-          <input 
-            type="checkbox" 
-            [value]="3"
-            [checked]="selectedRatings.includes(3)"
-            (change)="onRatingChange(3, $event)"
-            class="rating-checkbox">
-          <span class="checkmark"></span>
-          <div class="stars">
-            <span class="star filled">★★★</span><span class="star empty">☆☆</span>
-            <span class="rating-text">(3+ Yıldız)</span>
-          </div>
+            type="checkbox"
+            [value]="rating.value"
+            [checked]="isSelected('ratings', rating.value)"
+            (change)="onRatingChange(rating.value, $event)">
+          <span class="checkbox-label">
+            <div class="stars">
+              <span *ngFor="let star of getStars(rating.value)" 
+                    class="star"
+                    [class.filled]="star <= rating.value">★</span>
+            </div>
+            ve üzeri
+            <span class="count" *ngIf="rating.count">({{ rating.count }})</span>
+          </span>
         </label>
       </div>
     </div>
 
     <!-- Diğer Filtreler -->
     <div class="filter-section">
-      <h4 class="filter-title">Filtreler</h4>
-      <div class="special-filters">
-        <label class="special-filter-item" 
-               [class.selected]="inStockOnly">
+      <h4 class="filter-title">Diğer Filtreler</h4>
+      <div class="filter-options">
+        <label class="checkbox-option">
           <input 
-            type="checkbox" 
-            [(ngModel)]="inStockOnly"
-            (change)="onStockFilterChange()"
-            class="special-checkbox">
-          <span class="checkmark"></span>
-          <span class="filter-name">Stoktakiler</span>
-        </label>
-        <label class="special-filter-item" 
-               [class.selected]="onSaleOnly">
-          <input 
-            type="checkbox" 
+            type="checkbox"
             [(ngModel)]="onSaleOnly"
-            (change)="onSaleFilterChange()"
-            class="special-checkbox">
-          <span class="checkmark"></span>
-          <span class="filter-name">İndirimdekiler</span>
+            (change)="onSaleChange()">
+          <span class="checkbox-label">İndirimde Olanlar</span>
+        </label>
+        <label class="checkbox-option">
+          <input 
+            type="checkbox"
+            [(ngModel)]="inStockOnly"
+            (change)="onStockChange()">
+          <span class="checkbox-label">Stokta Olanlar</span>
         </label>
       </div>
     </div>
