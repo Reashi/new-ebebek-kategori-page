@@ -1,0 +1,259 @@
+/* src/app/app.component.scss */
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  background: #f8f9fa;
+}
+
+/* Main Content */
+.app-main {
+  flex: 1;
+  background: #f8f9fa;
+  
+  // Router outlet içeriğine padding vermemek için
+  ::ng-deep router-outlet + * {
+    display: block;
+    width: 100%;
+  }
+}
+
+/* Footer Styles */
+.app-footer {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  padding: 30px 0 20px 0;
+  margin-top: auto;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  
+  p {
+    margin: 0;
+    font-size: 0.9em;
+    opacity: 0.9;
+  }
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  
+  @media (max-width: 480px) {
+    justify-content: center;
+    gap: 15px;
+  }
+}
+
+.footer-link {
+  color: white;
+  text-decoration: none;
+  font-size: 0.85em;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+  padding: 5px 0;
+  position: relative;
+  
+  &:hover {
+    opacity: 1;
+    color: #74b9ff;
+    transform: translateY(-1px);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #74b9ff;
+    transition: width 0.3s ease;
+  }
+  
+  &:hover::after {
+    width: 100%;
+  }
+}
+
+.footer-social {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  text-decoration: none;
+  font-size: 1.2em;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(-1px) scale(1.05);
+  }
+}
+
+/* Loading animation for route transitions */
+.app-main {
+  position: relative;
+  
+  &.loading {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3498db, #74b9ff, #3498db);
+      background-size: 200% 100%;
+      animation: loading 1.5s linear infinite;
+      z-index: 1000;
+    }
+  }
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-footer {
+    padding: 20px 0 15px 0;
+  }
+  
+  .footer-content {
+    padding: 0 15px;
+  }
+  
+  .footer-links {
+    gap: 15px;
+  }
+  
+  .footer-link {
+    font-size: 0.8em;
+  }
+  
+  .social-link {
+    width: 35px;
+    height: 35px;
+    font-size: 1em;
+  }
+}
+
+/* Print styles */
+@media print {
+  .app-footer {
+    display: none;
+  }
+  
+  .app-main {
+    flex: none;
+  }
+}
+
+/* Dark mode support (future) */
+@media (prefers-color-scheme: dark) {
+  .app-container {
+    background: #1a1a1a;
+  }
+  
+  .app-main {
+    background: #1a1a1a;
+  }
+  
+  .app-footer {
+    background: linear-gradient(135deg, #111 0%, #222 100%);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .footer-link {
+    border: 1px solid transparent;
+    
+    &:focus,
+    &:hover {
+      border-color: white;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 5px 8px;
+      border-radius: 4px;
+    }
+  }
+  
+  .social-link {
+    border: 2px solid white;
+    
+    &:focus,
+    &:hover {
+      background: white;
+      color: #2c3e50;
+    }
+  }
+}
+
+/* Focus styles for accessibility */
+.footer-link:focus,
+.social-link:focus {
+  outline: 2px solid #74b9ff;
+  outline-offset: 2px;
+}
+
+/* Animation for app container */
+.app-container {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

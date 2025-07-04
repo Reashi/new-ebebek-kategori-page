@@ -1,6 +1,6 @@
 // src/app/features/product-listing/store/product.reducer.ts
 import { createReducer, on } from '@ngrx/store';
-import { ProductState } from './product.model';
+import { FilterOptions, ProductState } from './product.model';
 import * as ProductActions from './product.actions';
 
 export const initialState: ProductState = {
@@ -11,7 +11,8 @@ export const initialState: ProductState = {
   filters: {},
   totalCount: 0,
   currentPage: 1,
-  pageSize: 12
+  pageSize: 12,
+  filterOptions: {} as FilterOptions
 };
 
 export const productReducer = createReducer(

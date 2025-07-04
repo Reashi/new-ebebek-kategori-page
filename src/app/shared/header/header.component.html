@@ -1,0 +1,192 @@
+<!-- src/app/shared/components/header/header.component.html -->
+<header class="header" (click)="closeAllDropdowns()">
+  <!-- Top Header -->
+  <div class="header-top">
+    <div class="header-container">
+      <!-- Logo -->
+      <div class="logo-section">
+        <h1 class="logo">e-bebek</h1>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="search-wrapper">
+          <input 
+            type="text" 
+            class="search-input"
+            placeholder="Ürün, kategori veya marka arayın"
+            [(ngModel)]="searchTerm"
+            (keydown)="onSearchKeydown($event)"
+            (click)="$event.stopPropagation()">
+          <button class="search-btn" (click)="onSearch(); $event.stopPropagation()">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions-section">
+        <!-- Favorites -->
+        <button class="action-btn" (click)="onFavoritesClick(); $event.stopPropagation()" title="Favorilerim">
+          <span class="action-icon">❤️</span>
+        </button>
+
+        <!-- Account -->
+        <button class="action-btn" (click)="onAccountClick(); $event.stopPropagation()" title="Hesabım">
+          <span class="action-text">Hesabım</span>
+        </button>
+
+        <!-- Cart -->
+        <button class="action-btn cart-btn" (click)="onCartClick(); $event.stopPropagation()" title="Sepetim">
+          <span class="action-text">Sepetim</span>
+          <span class="cart-badge">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Header -->
+  <div class="header-bottom">
+    <div class="header-container">
+      <!-- Left Navigation -->
+      <div class="nav-left">
+        <!-- Kategoriler Dropdown -->
+        <div class="dropdown-wrapper">
+          <button 
+            class="nav-btn dropdown-btn" 
+            (click)="toggleKategorilerDropdown(); $event.stopPropagation()"
+            [class.active]="isKategorilerDropdownOpen">
+            <span>Kategoriler</span>
+            <svg class="dropdown-arrow" [class.rotated]="isKategorilerDropdownOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="6,9 12,15 18,9"></polyline>
+            </svg>
+          </button>
+          
+          <div class="dropdown-menu" [class.show]="isKategorilerDropdownOpen" (click)="$event.stopPropagation()">
+            <div class="dropdown-content">
+              <button class="dropdown-item" (click)="onCategorySelect('bebek-arabalari')">
+                <span class="category-icon">🚼</span>
+                Bebek Arabaları
+              </button>
+              <button class="dropdown-item" (click)="onCategorySelect('mama-beslenme')">
+                <span class="category-icon">🍼</span>
+                Mama & Beslenme
+              </button>
+              <button class="dropdown-item" (click)="onCategorySelect('oyuncaklar')">
+                <span class="category-icon">🧸</span>
+                Oyuncaklar
+              </button>
+              <button class="dropdown-item" (click)="onCategorySelect('emzirme-beslenme')">
+                <span class="category-icon">🤱</span>
+                Emzirme & Beslenme
+              </button>
+              <button class="dropdown-item" (click)="onCategorySelect('guvenlik')">
+                <span class="category-icon">🛡️</span>
+                Güvenlik
+              </button>
+              <button class="dropdown-item" (click)="onCategorySelect('bakim-hijyen')">
+                <span class="category-icon">🧴</span>
+                Bakım & Hijyen
+              </button>
+              <button class="dropdown-item" (click)="onCategorySelect('oto-koltugu')">
+                <span class="category-icon">🚗</span>
+                Oto Koltuğu
+              </button>
+              <button class="dropdown-item" (click)="onCategorySelect('bez-islak-mendil')">
+                <span class="category-icon">👶</span>
+                Bez & Islak Mendil
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Keşfet Dropdown -->
+        <div class="dropdown-wrapper">
+          <button 
+            class="nav-btn dropdown-btn" 
+            (click)="toggleKesfetDropdown(); $event.stopPropagation()"
+            [class.active]="isKesfetDropdownOpen">
+            <span>Keşfet</span>
+            <svg class="dropdown-arrow" [class.rotated]="isKesfetDropdownOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="6,9 12,15 18,9"></polyline>
+            </svg>
+          </button>
+          
+          <div class="dropdown-menu" [class.show]="isKesfetDropdownOpen" (click)="$event.stopPropagation()">
+            <div class="dropdown-content">
+              <button class="dropdown-item" (click)="onKesfetSelect('yeni-urunler')">
+                ✨ Yeni Ürünler
+              </button>
+              <button class="dropdown-item" (click)="onKesfetSelect('en-cok-satanlar')">
+                🏆 En Çok Satanlar
+              </button>
+              <button class="dropdown-item" (click)="onKesfetSelect('blog')">
+                📝 Blog
+              </button>
+              <button class="dropdown-item" (click)="onKesfetSelect('anne-baba-rehberi')">
+                📚 Anne Baba Rehberi
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hediye Dropdown -->
+        <div class="dropdown-wrapper">
+          <button 
+            class="nav-btn dropdown-btn" 
+            (click)="toggleHediyeDropdown(); $event.stopPropagation()"
+            [class.active]="isHediyeDropdownOpen">
+            <span>Hediye</span>
+            <svg class="dropdown-arrow" [class.rotated]="isHediyeDropdownOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="6,9 12,15 18,9"></polyline>
+            </svg>
+          </button>
+          
+          <div class="dropdown-menu" [class.show]="isHediyeDropdownOpen" (click)="$event.stopPropagation()">
+            <div class="dropdown-content">
+              <button class="dropdown-item" (click)="onHediyeSelect('hediye-seti')">
+                🎁 Hediye Setleri
+              </button>
+              <button class="dropdown-item" (click)="onHediyeSelect('hediye-karti')">
+                💳 Hediye Kartı
+              </button>
+              <button class="dropdown-item" (click)="onHediyeSelect('dogum-gunleri')">
+                🎂 Doğum Günleri
+              </button>
+              <button class="dropdown-item" (click)="onHediyeSelect('ozel-gunler')">
+                🎉 Özel Günler
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Static Buttons -->
+        <button class="nav-btn" (click)="onInternetOzelClick(); $event.stopPropagation()">
+          İnternete Özel Ürünler
+        </button>
+
+        <button class="nav-btn" (click)="onKampanyalarClick(); $event.stopPropagation()">
+          Kampanyalar
+        </button>
+
+        <button class="nav-btn outlet-btn" (click)="onOutletClick(); $event.stopPropagation()">
+          Outlet
+        </button>
+      </div>
+
+      <!-- Right Navigation -->
+      <div class="nav-right">
+        <button class="nav-link" (click)="onSiparisimNeredeClick(); $event.stopPropagation()">
+          Siparişim Nerede?
+        </button>
+        
+        <button class="nav-link" (click)="onEnYakinEbebekClick(); $event.stopPropagation()">
+          En Yakın E-bebek
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

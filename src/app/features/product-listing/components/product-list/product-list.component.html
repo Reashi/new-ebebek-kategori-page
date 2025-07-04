@@ -1,1 +1,218 @@
-<p>product-list works!</p>
+<!-- src/app/features/product-listing/components/product-list/product-list.component.html -->
+<div class="product-list-container">
+  <!-- Header Section -->
+  <div class="list-header">
+    <h1>E-bebek Ürünleri</h1>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading$ | async" class="loading-state">
+    <div class="spinner"></div>
+    <p>Ürünler yükleniyor...</p>
+  </div>
+  
+  <!-- Error State -->
+  <div *ngIf="error$ | async as error" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <h3>Bir hata oluştu</h3>
+    <p>{{ error }}</p>
+    <button (click)="retryLoad()" class="retry-btn">Tekrar Dene</button>
+  </div>
+  
+  <!-- Products Section -->
+  <div class="products-section" *ngIf="!(loading$ | async) && !(error$ | async)">
+    <!-- Results Info -->
+    <div class="results-info" *ngIf="paginationInfo$ | async as info">
+      <p class="results-text">
+        <strong>{{ info.totalCount }}</strong> üründen 
+        <strong>{{ info.startItem }}-{{ info.endItem }}</strong> arası gösteriliyor
+      </p>
+      <div class="active-filters-info" *ngIf="activeFiltersCount$ | async as count">
+        <span class="filter-count" *ngIf="count > 0">
+          {{ count }} filtre aktif
+        </span>
+      </div>
+    </div>
+    
+    <!-- Products Grid -->
+    <div class="products-grid" *ngIf="(products$ | async)?.length; else noProductsFound">
+      <div 
+        *ngFor="let product of products$ | async; trackBy: trackByProductId" 
+        class="product-card"
+        [class.out-of-stock]="!product.inStock"
+        [class.on-sale]="product.isOnSale"
+        [attr.aria-label]="getProductAriaLabel(product)">
+        
+        <!-- Product Image -->
+        <div class="product-image-wrapper" (click)="selectProduct(product.id)">
+          <div class="product-image-placeholder">
+            <span class="image-icon" aria-hidden="true">📷</span>
+          </div>
+          
+          <!-- Sale Badge -->
+          <div *ngIf="product.isOnSale" class="sale-badge">
+            {{ getDiscountPercentage(product) }}% İndirim
+          </div>
+          
+          <!-- Stock Overlay -->
+          <div *ngIf="!product.inStock" class="stock-overlay">
+            Stok Yok
+          </div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="product-info">
+          <h3 class="product-name" (click)="selectProduct(product.id)">
+            {{ product.name }}
+          </h3>
+          
+          <!-- Brand -->
+          <div class="product-brand" *ngIf="product.brandId">
+            {{ product.brandId }}
+          </div>
+          
+          <!-- Rating -->
+          <div class="product-rating" *ngIf="product.rating">
+            <div class="stars">
+              <span 
+                *ngFor="let star of getStarsArray(product.rating)" 
+                class="star"
+                [class.filled]="star.filled">
+                ★
+              </span>
+            </div>
+            <span class="rating-text">
+              ({{ product.rating.toFixed(1) }}) • {{ product.reviewCount }} yorum
+            </span>
+          </div>
+          
+          <!-- Price -->
+          <div class="price-section">
+            <div class="current-price">
+              {{ product.price | currency:'TRY':'symbol':'1.2-2' }}
+            </div>
+            <div *ngIf="hasDiscount(product)" class="original-price">
+              {{ product.originalPrice | currency:'TRY':'symbol':'1.2-2' }}
+            </div>
+          </div>
+          
+          <!-- Add to Cart Button -->
+          <button 
+            class="add-to-cart-btn" 
+            [disabled]="!product.inStock"
+            (click)="addToCart(product.id, $event)"
+            [attr.aria-label]="product.inStock ? 'Sepete ekle' : 'Stokta yok'">
+            <span class="cart-icon" aria-hidden="true">🛒</span>
+            <span class="btn-text">
+              {{ product.inStock ? 'Sepete Ekle' : 'Stok Yok' }}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- No Products Found Template -->
+    <ng-template #noProductsFound>
+      <div class="no-products-state">
+        <div class="no-products-icon">🔍</div>
+        <h3>Ürün bulunamadı</h3>
+        <p>Aradığınız kriterlere uygun ürün bulunamadı.</p>
+        <p>Farklı filtreler deneyebilir veya arama teriminizi değiştirebilirsiniz.</p>
+        <button 
+          *ngIf="activeFiltersCount$ | async" 
+          (click)="clearAllFilters()" 
+          class="clear-filters-btn">
+          Filtreleri Temizle
+        </button>
+      </div>
+    </ng-template>
+    
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="paginationInfo$ | async as info">
+      <button 
+        (click)="previousPage()" 
+        [disabled]="!info.hasPreviousPage"
+        class="page-btn prev-btn"
+        aria-label="Önceki sayfa">
+        ← Önceki
+      </button>
+      
+      <div class="page-numbers">
+        <span class="page-info">
+          Sayfa {{ info.currentPage }} / {{ info.totalPages }}
+        </span>
+      </div>
+      
+      <button 
+        (click)="nextPage()" 
+        [disabled]="!info.hasNextPage"
+        class="page-btn next-btn"
+        aria-label="Sonraki sayfa">
+        Sonraki →
+      </button>
+    </div>
+  </div>
+  
+  <!-- Selected Product Modal -->
+  <div 
+    *ngIf="selectedProduct$ | async as selected" 
+    class="modal-overlay" 
+    (click)="closeModal()"
+    (keydown)="onModalKeydown($event)"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Ürün detayları: ' + selected.name">
+    
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button 
+        class="close-btn" 
+        (click)="closeModal()"
+        aria-label="Kapat">
+        ×
+      </button>
+      
+      <div class="modal-image-wrapper">
+        <img 
+          [src]="selected.imageUrl || 'assets/placeholder-image.jpg'" 
+          [alt]="selected.name" 
+          class="modal-image">
+      </div>
+      
+      <div class="modal-info">
+        <h2>{{ selected.name }}</h2>
+        <p class="modal-description">{{ selected.description }}</p>
+        
+        <div class="modal-rating" *ngIf="selected.rating">
+          <div class="stars">
+            <span 
+              *ngFor="let star of getStarsArray(selected.rating)" 
+              class="star"
+              [class.filled]="star.filled">
+              ★
+            </span>
+          </div>
+          <span class="rating-text">
+            ({{ selected.rating.toFixed(1) }}) • {{ selected.reviewCount }} yorum
+          </span>
+        </div>
+        
+        <div class="modal-price-section">
+          <div class="modal-current-price">
+            {{ selected.price | currency:'TRY':'symbol':'1.2-2' }}
+          </div>
+          <div *ngIf="hasDiscount(selected)" class="modal-original-price">
+            {{ selected.originalPrice | currency:'TRY':'symbol':'1.2-2' }}
+          </div>
+        </div>
+        
+        <button 
+          class="modal-add-to-cart-btn" 
+          [disabled]="!selected.inStock"
+          (click)="addToCart(selected.id)">
+          <span class="cart-icon">🛒</span>
+          {{ selected.inStock ? 'Sepete Ekle' : 'Stok Yok' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

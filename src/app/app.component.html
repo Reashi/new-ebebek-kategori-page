@@ -1,3 +1,32 @@
-
-
-<router-outlet />
+<!-- src/app/app.component.html -->
+<div class="app-container">
+  <!-- Header Section -->
+  <app-header></app-header>
+  
+  <!-- Main Content Area -->
+  <main class="app-main">
+    <!-- Router outlet - Burada ProductListingPageComponent render edilecek -->
+    <router-outlet></router-outlet>
+  </main>
+  
+  <!-- Footer Section -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <div class="footer-info">
+        <p>&copy; 2025 E-bebek. Tüm hakları saklıdır.</p>
+        <div class="footer-links">
+          <a href="/hakkimizda" class="footer-link">Hakkımızda</a>
+          <a href="/iletisim" class="footer-link">İletişim</a>
+          <a href="/gizlilik" class="footer-link">Gizlilik Politikası</a>
+          <a href="/kullanim-kosullari" class="footer-link">Kullanım Koşulları</a>
+        </div>
+      </div>
+      <div class="footer-social">
+        <a href="#" class="social-link" aria-label="Facebook">📘</a>
+        <a href="#" class="social-link" aria-label="Instagram">📷</a>
+        <a href="#" class="social-link" aria-label="Twitter">🐦</a>
+        <a href="#" class="social-link" aria-label="YouTube">📺</a>
+      </div>
+    </div>
+  </footer>
+</div>

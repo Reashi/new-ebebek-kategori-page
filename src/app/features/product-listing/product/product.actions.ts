@@ -71,3 +71,7 @@ export const setPageSize = createAction(
 export const resetProductState = createAction(
   '[Product] Reset State'
 );
+
+export function loadFilterOptions(): any {
+  throw new Error('Function not implemented.');
+}

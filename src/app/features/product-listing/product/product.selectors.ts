@@ -1,4 +1,4 @@
-// src/app/features/product-listing/store/product.selectors.ts
+// src/app/features/product-listing/product/product.selectors.ts
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { ProductState, Product } from './product.model';
 
@@ -31,6 +31,11 @@ export const selectProductFilters = createSelector(
   (state) => state.filters
 );
 
+export const selectFilterOptions = createSelector(
+  selectProductState,
+  (state) => state.filterOptions
+);
+
 export const selectTotalCount = createSelector(
   selectProductState,
   (state) => state.totalCount
@@ -44,6 +49,32 @@ export const selectCurrentPage = createSelector(
 export const selectPageSize = createSelector(
   selectProductState,
   (state) => state.pageSize
+);
+
+// Filter Options Selectors - FIX: Default değerlerle birlikte
+export const selectCategories = createSelector(
+  selectFilterOptions,
+  (filterOptions) => filterOptions?.categories || []
+);
+
+export const selectBrands = createSelector(
+  selectFilterOptions,
+  (filterOptions) => filterOptions?.brands || []
+);
+
+export const selectSizes = createSelector(
+  selectFilterOptions,
+  (filterOptions) => filterOptions?.sizes || []
+);
+
+export const selectColors = createSelector(
+  selectFilterOptions,
+  (filterOptions) => filterOptions?.colors || []
+);
+
+export const selectPriceRange = createSelector(
+  selectFilterOptions,
+  (filterOptions) => filterOptions?.priceRange || { min: 0, max: 5000 }
 );
 
 // Computed selectors
@@ -82,6 +113,12 @@ export const selectInStockProducts = createSelector(
   (products) => products.filter(product => product.inStock)
 );
 
+// On sale products
+export const selectOnSaleProducts = createSelector(
+  selectAllProducts,
+  (products) => products.filter(product => product.isOnSale)
+);
+
 // Search results
 export const selectSearchResults = createSelector(
   selectAllProducts,
@@ -108,6 +145,91 @@ export const selectProductsInPriceRange = createSelector(
     return products.filter(product => 
       product.price >= min && product.price <= max
     );
+  }
+);
+
+// Filtered products (by brands)
+export const selectProductsByBrands = createSelector(
+  selectAllProducts,
+  selectProductFilters,
+  (products, filters) => {
+    if (!filters.brandIds || filters.brandIds.length === 0) return products;
+    
+    return products.filter(product => 
+      filters.brandIds!.includes(product.brandId)
+    );
+  }
+);
+
+// Filtered products (by sizes)
+export const selectProductsBySizes = createSelector(
+  selectAllProducts,
+  selectProductFilters,
+  (products, filters) => {
+    if (!filters.sizeIds || filters.sizeIds.length === 0) return products;
+    
+    return products.filter(product => 
+      product.sizes && product.sizes.some(size => filters.sizeIds!.includes(size))
+    );
+  }
+);
+
+// Filtered products (by colors)
+export const selectProductsByColors = createSelector(
+  selectAllProducts,
+  selectProductFilters,
+  (products, filters) => {
+    if (!filters.colorIds || filters.colorIds.length === 0) return products;
+    
+    return products.filter(product => 
+      product.colors && product.colors.some(color => filters.colorIds!.includes(color))
+    );
+  }
+);
+
+// Filtered products (by genders)
+export const selectProductsByGenders = createSelector(
+  selectAllProducts,
+  selectProductFilters,
+  (products, filters) => {
+    if (!filters.genders || filters.genders.length === 0) return products;
+    
+    return products.filter(product => 
+      filters.genders!.includes(product.gender)
+    );
+  }
+);
+
+// Filtered products (by ratings)
+export const selectProductsByRatings = createSelector(
+  selectAllProducts,
+  selectProductFilters,
+  (products, filters) => {
+    if (!filters.ratings || filters.ratings.length === 0) return products;
+    
+    return products.filter(product => {
+      const productRating = Math.floor(product.rating);
+      return filters.ratings!.some(rating => productRating >= rating);
+    });
+  }
+);
+
+// Active filters count
+export const selectActiveFiltersCount = createSelector(
+  selectProductFilters,
+  (filters) => {
+    let count = 0;
+    if (filters.categoryId) count++;
+    if (filters.brandIds && filters.brandIds.length > 0) count++;
+    if (filters.sizeIds && filters.sizeIds.length > 0) count++;
+    if (filters.colorIds && filters.colorIds.length > 0) count++;
+    if (filters.genders && filters.genders.length > 0) count++;
+    if (filters.ratings && filters.ratings.length > 0) count++;
+    if (filters.priceRange) count++;
+    if (filters.inStockOnly) count++;
+    if (filters.onSaleOnly) count++;
+    if (filters.searchTerm) count++;
+    return count;
   }
 );
 
