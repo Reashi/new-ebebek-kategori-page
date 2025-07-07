@@ -1,493 +1,474 @@
 // src/app/features/product-listing/services/product.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, delay } from 'rxjs';
+import { HttpClient, HttpParams, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError, of, timer } from 'rxjs';
+import { map, catchError, timeout, retry, switchMap } from 'rxjs/operators';
+
 import { Product, ProductFilters } from '../product/product.model';
+import { EbebekApiResponse, EbebekProduct, EbebekProductMapper } from './ebebek-api.model';
+import { MockDataService } from './mock-data.service';
+import { environment } from '../../../../environments/environment';
 
 export interface ProductResponse {
   products: Product[];
   totalCount: number;
   currentPage: number;
   pageSize: number;
+  facets?: any[];
+  breadcrumbs?: any[];
 }
 
 export interface ProductQueryParams {
   filters?: ProductFilters;
   page?: number;
   pageSize?: number;
+  sortBy?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl = 'https://api.ebebek.com/products'; // Gerçek API URL'ini buraya yaz
+  private readonly baseUrl = environment.ebebekApi.baseUrl;
+  private readonly requestTimeout = environment.ebebekApi.timeout;
+  private readonly retryAttempts = environment.ebebekApi.retryAttempts;
+  private readonly retryDelay = environment.ebebekApi.retryDelay;
 
-  constructor(private http: HttpClient) {}
+  // E-bebek kategori mapping (gerçek E-bebek kategori kodları)
+  private readonly categoryMapping: { [key: string]: string } = {
+    'strollers': '0002',          // Bebek Arabaları
+    'food': '0003',               // Mama & Beslenme
+    'toys': '0004',               // Oyuncaklar
+    'feeding': '0005',            // Emzirme & Beslenme
+    'safety': '0006',             // Güvenlik
+    'care': '0007',               // Bakım & Hijyen
+    'car-seats': '0008',          // Oto Koltuğu
+    'diapers': '0009',            // Bez & Islak Mendil
+    'bath': '0010',               // Banyo
+    'sleep': '0011'               // Uyku
+  };
+
+  constructor(
+    private http: HttpClient,
+    private mockDataService: MockDataService
+  ) {
+    this.validateConfig();
+  }
+
+  private validateConfig(): void {
+    if (!this.baseUrl && !environment.features.enableApiMocking) {
+      throw new Error('E-bebek API base URL is not configured and API mocking is disabled');
+    }
+
+    if (environment.features.enableLogging) {
+      console.log('ProductService configured with:', {
+        baseUrl: this.baseUrl,
+        timeout: this.requestTimeout,
+        retryAttempts: this.retryAttempts,
+        apiMocking: environment.features.enableApiMocking
+      });
+    }
+  }
 
   getProducts(params: ProductQueryParams = {}): Observable<ProductResponse> {
-    // Geçici olarak mock data kullanıyoruz
-    // Gerçek API entegrasyonu için bu kısmı değiştir
-    return this.getMockProducts(params);
-    
-    // Gerçek API için bu kodu kullan:
-    /*
+    // Development modunda mock data kullan
+    if (environment.features.enableApiMocking) {
+      if (environment.features.enableLogging) {
+        console.log('Using mock data service for products');
+      }
+      return this.mockDataService.getProducts(params);
+    }
+
+    // Gerçek API çağrısı
+    return this.callRealApi(params);
+  }
+
+  private callRealApi(params: ProductQueryParams): Observable<ProductResponse> {
+    const url = `${this.baseUrl}/products/search`;
     const httpParams = this.buildHttpParams(params);
-    return this.http.get<ProductResponse>(this.apiUrl, { params: httpParams });
-    */
+    const headers = this.getHeaders();
+
+    if (environment.features.enableLogging) {
+      console.log('Making real API request:', {
+        url,
+        params: httpParams.toString(),
+        headers: headers.keys()
+      });
+    }
+
+    return this.http.get<EbebekApiResponse>(url, { params: httpParams, headers })
+      .pipe(
+        timeout(this.requestTimeout),
+        retry({
+          count: this.retryAttempts,
+          delay: (error, retryCount) => {
+            if (environment.features.enableLogging) {
+              console.log(`API retry attempt ${retryCount} after error:`, error);
+            }
+            return timer(this.retryDelay * retryCount);
+          }
+        }),
+        map((response: EbebekApiResponse) => this.mapApiResponse(response, params)),
+        catchError((error: any) => {
+          this.logError('getProducts', error, params);
+          
+          // Production'da fallback olarak mock data kullan
+          if (environment.production && error.status >= 500) {
+            console.warn('API failed, falling back to mock data');
+            return this.mockDataService.getProducts(params);
+          }
+          
+          return throwError(() => new Error(this.getErrorMessage(error)));
+        })
+      );
   }
 
   getProductById(id: string): Observable<Product> {
-    // Geçici olarak mock data kullanıyoruz
-    return this.getMockProductById(id);
-    
-    // Gerçek API için bu kodu kullan:
-    /*
-    return this.http.get<Product>(`${this.apiUrl}/${id}`);
-    */
+    // Mock data kullan
+    if (environment.features.enableApiMocking) {
+      return this.mockDataService.getProductById(id);
+    }
+
+    const url = `${this.baseUrl}/products/${id}`;
+    const headers = this.getHeaders();
+
+    return this.http.get<EbebekProduct>(url, { headers })
+      .pipe(
+        timeout(this.requestTimeout),
+        retry({
+          count: this.retryAttempts,
+          delay: this.retryDelay
+        }),
+        map(ebebekProduct => EbebekProductMapper.mapToProduct(ebebekProduct)),
+        catchError(error => {
+          this.logError('getProductById', error, { id });
+          
+          // Fallback
+          if (environment.production && error.status >= 500) {
+            return this.mockDataService.getProductById(id);
+          }
+          
+          return throwError(() => new Error(this.getErrorMessage(error)));
+        })
+      );
+  }
+
+  searchProducts(searchTerm: string, params: ProductQueryParams = {}): Observable<ProductResponse> {
+    const searchParams = {
+      ...params,
+      filters: {
+        ...params.filters,
+        searchTerm
+      }
+    };
+
+    return this.getProducts(searchParams);
   }
 
   private buildHttpParams(params: ProductQueryParams): HttpParams {
     let httpParams = new HttpParams();
 
-    if (params.page) {
-      httpParams = httpParams.set('page', params.page.toString());
-    }
+    // Sayfalama
+    const page = params.page || 1;
+    const pageSize = Math.min(params.pageSize || environment.app.defaultPageSize, environment.app.maxPageSize);
+    httpParams = httpParams.set('pageSize', pageSize.toString());
+    httpParams = httpParams.set('currentPage', (page - 1).toString());
 
-    if (params.pageSize) {
-      httpParams = httpParams.set('pageSize', params.pageSize.toString());
-    }
+    // Dil ve para birimi
+    httpParams = httpParams.set('lang', 'tr');
+    httpParams = httpParams.set('curr', 'TRY');
 
-    if (params.filters) {
-      const { filters } = params;
-      
-      if (filters.categoryId) {
-        httpParams = httpParams.set('categoryId', filters.categoryId);
-      }
-      
-      if (filters.searchTerm) {
-        httpParams = httpParams.set('search', filters.searchTerm);
-      }
-      
-      if (filters.brandIds && filters.brandIds.length > 0) {
-        httpParams = httpParams.set('brands', filters.brandIds.join(','));
-      }
-      
-      if (filters.sizes && filters.sizes.length > 0) {
-        httpParams = httpParams.set('sizes', filters.sizes.join(','));
-      }
-      
-      if (filters.genders && filters.genders.length > 0) {
-        httpParams = httpParams.set('genders', filters.genders.join(','));
-      }
-      
-      if (filters.colors && filters.colors.length > 0) {
-        httpParams = httpParams.set('colors', filters.colors.join(','));
-      }
-      
-      if (filters.ratings && filters.ratings.length > 0) {
-        httpParams = httpParams.set('ratings', filters.ratings.join(','));
-      }
-      
-      if (filters.priceRange) {
-        httpParams = httpParams.set('minPrice', filters.priceRange.min.toString());
-        httpParams = httpParams.set('maxPrice', filters.priceRange.max.toString());
-      }
-      
-      if (filters.inStockOnly) {
-        httpParams = httpParams.set('inStock', 'true');
-      }
-      
-      if (filters.onSaleOnly) {
-        httpParams = httpParams.set('onSale', 'true');
-      }
+    // Alan seçimi (fields parameter) - curl komutundan alınan
+    const fields = this.getFieldsParameter();
+    httpParams = httpParams.set('fields', fields);
+
+    // Query oluşturma
+    const query = this.buildQuery(params.filters, params.sortBy);
+    httpParams = httpParams.set('query', query);
+
+    if (environment.features.enableLogging) {
+      console.log('Built HTTP params:', httpParams.toString());
     }
 
     return httpParams;
   }
 
-  // Mock data methods (gerçek API entegrasyonunda kaldır)
-  private getMockProducts(params: ProductQueryParams): Observable<ProductResponse> {
-    const mockProducts: Product[] = [
-      {
-        id: '1',
-        name: 'Bebek Arabası Premium Comfort',
-        price: 1299.99,
-        originalPrice: 1599.99,
-        description: 'Konforlu ve güvenli bebek arabası',
-        imageUrl: '',
-        categoryId: 'strollers',
-        brandId: 'chicco',
-        inStock: true,
-        rating: 4.5,
-        reviewCount: 120,
-        colors: ['siyah', 'gri'],
-        sizes: ['0-3-ay', '3-6-ay'],
-        gender: 'unisex',
-        isOnSale: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '2',
-        name: 'Organik Bebek Maması 6 Aylık',
-        price: 45.50,
-        description: 'Doğal ve organik bebek maması',
-        imageUrl: '',
-        categoryId: 'food',
-        brandId: 'johnson',
-        inStock: true,
-        rating: 4.8,
-        reviewCount: 89,
-        colors: ['krem'],
-        sizes: ['6-12-ay'],
-        gender: 'unisex',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '3',
-        name: 'Eğitici Bebek Oyuncağı Set',
-        price: 89.99,
-        originalPrice: 129.99,
-        description: 'Eğitici ve eğlenceli oyuncak seti',
-        imageUrl: '',
-        categoryId: 'toys',
-        brandId: 'bebeto',
-        inStock: false,
-        rating: 4.2,
-        reviewCount: 65,
-        colors: ['kirmizi', 'mavi', 'yesil'],
-        sizes: ['12-18-ay', '18-24-ay'],
-        gender: 'erkek',
-        isOnSale: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '4',
-        name: 'Bebek Emzirme Yastığı',
-        price: 125.00,
-        description: 'Ergonomik emzirme yastığı',
-        imageUrl: '',
-        categoryId: 'feeding',
-        brandId: 'philips-avent',
-        inStock: true,
-        rating: 4.6,
-        reviewCount: 156,
-        colors: ['pembe', 'mavi'],
-        sizes: ['0-3-ay'],
-        gender: 'kız',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '5',
-        name: 'Bebek Güvenlik Kamerası',
-        price: 350.75,
-        description: 'WiFi destekli bebek monitörü',
-        imageUrl: '',
-        categoryId: 'safety',
-        brandId: 'mama-papa',
-        inStock: true,
-        rating: 4.4,
-        reviewCount: 78,
-        colors: ['beyaz', 'siyah'],
-        sizes: ['genel'],
-        gender: 'unisex',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '6',
-        name: 'Organik Bebek Şampuanı',
-        price: 25.99,
-        originalPrice: 35.99,
-        description: 'Doğal içerikli bebek şampuanı',
-        imageUrl: '',
-        categoryId: 'care',
-        brandId: 'johnson',
-        inStock: true,
-        rating: 4.7,
-        reviewCount: 234,
-        colors: ['sari'],
-        sizes: ['genel'],
-        gender: 'unisex',
-        isOnSale: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '7',
-        name: 'Bebek Oto Koltuğu',
-        price: 750.00,
-        description: 'ECE sertifikalı güvenli oto koltuğu',
-        imageUrl: '',
-        categoryId: 'car-seats',
-        brandId: 'chicco',
-        inStock: false,
-        rating: 4.9,
-        reviewCount: 445,
-        colors: ['siyah', 'gri', 'lacivert'],
-        sizes: ['0-3-ay', '3-6-ay', '6-12-ay'],
-        gender: 'unisex',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '8',
-        name: 'Yumuşak Peluş Ayıcık',
-        price: 35.50,
-        description: 'Yumuşak ve güvenli peluş oyuncak',
-        imageUrl: '',
-        categoryId: 'toys',
-        brandId: 'nuby',
-        inStock: true,
-        rating: 4.3,
-        reviewCount: 189,
-        colors: ['kahverengi', 'pembe', 'mavi'],
-        sizes: ['12-18-ay', '18-24-ay', '2-3-yas'],
-        gender: 'kız',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '9',
-        name: 'Bebek Bezi Paketi (64 Adet)',
-        price: 85.99,
-        originalPrice: 99.99,
-        description: 'Ultra emici bebek bezleri',
-        imageUrl: '',
-        categoryId: 'diapers',
-        brandId: 'bebeto',
-        inStock: true,
-        rating: 4.1,
-        reviewCount: 567,
-        colors: ['beyaz'],
-        sizes: ['3-6-ay', '6-12-ay'],
-        gender: 'unisex',
-        isOnSale: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '10',
-        name: 'Bebek Banyo Küveti',
-        price: 95.00,
-        description: 'Ergonomik tasarım banyo küveti',
-        imageUrl: '',
-        categoryId: 'bath',
-        brandId: 'tommee-tippee',
-        inStock: true,
-        rating: 4.5,
-        reviewCount: 134,
-        colors: ['mavi', 'pembe', 'yesil'],
-        sizes: ['0-3-ay', '3-6-ay'],
-        gender: 'unisex',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '11',
-        name: 'Bebek Mama Sandalyesi',
-        price: 180.75,
-        originalPrice: 220.75,
-        description: 'Ayarlanabilir mama sandalyesi',
-        imageUrl: '',
-        categoryId: 'feeding',
-        brandId: 'chicco',
-        inStock: false,
-        rating: 4.6,
-        reviewCount: 298,
-        colors: ['gri', 'turkuaz'],
-        sizes: ['6-12-ay', '12-18-ay', '18-24-ay'],
-        gender: 'unisex',
-        isOnSale: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '12',
-        name: 'Bebek Uyku Tulumu',
-        price: 65.99,
-        description: 'Rahat ve güvenli uyku tulumu',
-        imageUrl: '',
-        categoryId: 'sleep',
-        brandId: 'mam',
-        inStock: true,
-        rating: 4.4,
-        reviewCount: 89,
-        colors: ['mor', 'pastel-mavi', 'krem'],
-        sizes: ['0-3-ay', '3-6-ay', '6-12-ay'],
-        gender: 'kız',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      // Daha fazla mock data
-      {
-        id: '13',
-        name: 'Erkek Bebek Tişört Seti',
-        price: 75.99,
-        originalPrice: 89.99,
-        description: '3\'lü erkek bebek tişört seti',
-        imageUrl: '',
-        categoryId: 'toys',
-        brandId: 'bebeto',
-        inStock: true,
-        rating: 4.2,
-        reviewCount: 45,
-        colors: ['mavi', 'yesil', 'turuncu'],
-        sizes: ['6-12-ay', '12-18-ay'],
-        gender: 'erkek',
-        isOnSale: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '14',
-        name: 'Kız Bebek Elbise',
-        price: 55.50,
-        description: 'Şık kız bebek elbise',
-        imageUrl: '',
-        categoryId: 'toys',
-        brandId: 'mama-papa',
-        inStock: true,
-        rating: 4.8,
-        reviewCount: 67,
-        colors: ['pembe', 'mor', 'gold'],
-        sizes: ['12-18-ay', '18-24-ay', '2-3-yas'],
-        gender: 'kız',
-        isOnSale: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: '15',
-        name: 'Antibakteriyel Islak Mendil',
-        price: 15.99,
-        originalPrice: 19.99,
-        description: 'Hassas ciltler için antibakteriyel mendil',
-        imageUrl: '',
-        categoryId: 'diapers',
-        brandId: 'johnson',
-        inStock: true,
-        rating: 4.3,
-        reviewCount: 789,
-        colors: ['beyaz'],
-        sizes: ['genel'],
-        gender: 'unisex',
-        isOnSale: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
+  private getFieldsParameter(): string {
+    // Curl komutundan alınan gerçek fields parametresi
+    return [
+      'products(',
+      'code,name,categoryCodes,bestSellerProduct,starProduct,minOrderQuantity',
+      ',newProduct,freeShipment,categoryNames,summary,discountedPrice(FULL)',
+      ',potentialPromotions(FULL),discountRate,brandName,hasOwnPackage',
+      ',internetProduct,configuratorType,price(FULL),images(DEFAULT)',
+      ',stock(FULL),numberOfReviews,averageRating,baseOptions(FULL)',
+      ',variantOptions(FULL),url,categories(FULL),baseProduct',
+      ',isVideoActive,isArActive,vendor',
+      ')',
+      ',facets(FULL),breadcrumbs,pagination(DEFAULT),sorts(DEFAULT)',
+      ',freeTextSearch,currentQuery,keywordRedirectUrl'
+    ].join('');
+  }
 
-    // Filtreleme simülasyonu
-    let filteredProducts = [...mockProducts];
-    
-    if (params.filters) {
-      const { filters } = params;
-      
-      if (filters.categoryId) {
-        filteredProducts = filteredProducts.filter(p => p.categoryId === filters.categoryId);
-      }
-      
-      if (filters.brandIds && filters.brandIds.length > 0) {
-        filteredProducts = filteredProducts.filter(p => filters.brandIds!.includes(p.brandId));
-      }
-      
-      if (filters.sizes && filters.sizes.length > 0) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.sizes && p.sizes.some(size => filters.sizes!.includes(size))
-        );
-      }
-      
-      if (filters.genders && filters.genders.length > 0) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.gender && filters.genders!.includes(p.gender)
-        );
-      }
-      
-      if (filters.colors && filters.colors.length > 0) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.colors && p.colors.some(color => filters.colors!.includes(color))
-        );
-      }
-      
-      if (filters.ratings && filters.ratings.length > 0) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.rating && filters.ratings!.some(rating => p.rating! >= rating)
-        );
-      }
-      
-      if (filters.searchTerm) {
-        const searchTerm = filters.searchTerm.toLowerCase();
-        filteredProducts = filteredProducts.filter(p => 
-          p.name.toLowerCase().includes(searchTerm) ||
-          p.description.toLowerCase().includes(searchTerm)
-        );
-      }
-      
-      if (filters.priceRange) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.price >= filters.priceRange!.min && p.price <= filters.priceRange!.max
-        );
-      }
-      
-      if (filters.inStockOnly) {
-        filteredProducts = filteredProducts.filter(p => p.inStock);
-      }
-      
-      if (filters.onSaleOnly) {
-        filteredProducts = filteredProducts.filter(p => p.isOnSale);
+  private buildQuery(filters?: ProductFilters, sortBy?: string): string {
+    let queryParts: string[] = [];
+
+    // Sıralama (curl komutundan alınan format)
+    const sort = this.mapSortBy(sortBy);
+    queryParts.push(`:${sort}`);
+
+    // Kategori filtresi
+    if (filters?.categoryId) {
+      const ebebekCategoryCode = this.categoryMapping[filters.categoryId];
+      if (ebebekCategoryCode) {
+        queryParts.push(`allCategories:${ebebekCategoryCode}`);
       }
     }
 
-    // Pagination simülasyonu
-    const page = params.page || 1;
-    const pageSize = params.pageSize || 12;
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+    // Marka filtresi
+    if (filters?.brandIds && filters.brandIds.length > 0) {
+      const brandQueries = filters.brandIds.map(brandId => `brand:${encodeURIComponent(brandId)}`);
+      if (brandQueries.length === 1) {
+        queryParts.push(brandQueries[0]);
+      } else {
+        queryParts.push(`(${brandQueries.join(' OR ')})`);
+      }
+    }
 
-    const response: ProductResponse = {
-      products: paginatedProducts,
-      totalCount: filteredProducts.length,
-      currentPage: page,
-      pageSize: pageSize
-    };
+    // Arama terimi
+    if (filters?.searchTerm && filters.searchTerm.trim()) {
+      const cleanSearchTerm = filters.searchTerm.trim().replace(/[^\w\s]/g, '');
+      queryParts.push(`text:${encodeURIComponent(cleanSearchTerm)}`);
+    }
 
-    // API çağrısı simülasyonu için delay
-    return of(response).pipe(delay(500));
+    // Fiyat aralığı
+    if (filters?.priceRange) {
+      queryParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
+    }
+
+    // Stok durumu
+    if (filters?.inStockOnly) {
+      queryParts.push('stockLevelStatus:inStock');
+    }
+
+    // İndirimli ürünler
+    if (filters?.onSaleOnly) {
+      queryParts.push('discountRate:[1 TO *]');
+    }
+
+    // Yeni ürünler
+    if (filters?.isNew) {
+      queryParts.push('newProduct:true');
+    }
+
+    const finalQuery = queryParts.join(':');
+    
+    if (environment.features.enableLogging) {
+      console.log('Built query:', finalQuery);
+    }
+
+    return finalQuery || ':relevance';
   }
 
-  private getMockProductById(id: string): Observable<Product> {
-    const mockProduct: Product = {
-      id,
-      name: `Ürün ${id}`,
-      price: 99.99,
-      description: `Ürün ${id} detaylı açıklaması`,
-      imageUrl: `https://via.placeholder.com/300x200?text=Ürün+${id}`,
-      categoryId: 'general',
-      brandId: 'chicco',
-      inStock: true,
-      rating: 4.0,
-      reviewCount: 25,
-      colors: ['mavi'],
-      sizes: ['genel'],
-      gender: 'unisex',
-      isOnSale: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
+  private mapSortBy(sortBy?: string): string {
+    const sortMap: { [key: string]: string } = {
+      'name': 'name-asc',
+      'price-asc': 'price-asc',
+      'price-desc': 'price-desc',
+      'rating': 'topRated',
+      'newest': 'creationtime-desc',
+      'popularity': 'relevance',
+      'relevance': 'relevance'
     };
 
-    return of(mockProduct).pipe(delay(300));
+    return sortMap[sortBy || 'relevance'] || 'relevance';
+  }
+
+  private getHeaders(): HttpHeaders {
+    // Curl komutundan alınan gerçek headers
+    const headers: { [key: string]: string } = {
+      'Accept': 'application/json, text/plain',
+      'platform': 'web',
+      'Referer': 'https://www.e-bebek.com/',
+      'sec-ch-ua-platform': '"macOS"',
+      'sec-ch-ua': '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+      'sec-ch-ua-mobile': '?0',
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
+    };
+
+    return new HttpHeaders(headers);
+  }
+
+  private mapApiResponse(response: EbebekApiResponse, params: ProductQueryParams): ProductResponse {
+    if (!response) {
+      throw new Error('Invalid API response');
+    }
+
+    if (environment.features.enableLogging) {
+      console.log('Raw API response structure:', {
+        hasProducts: !!response.products,
+        productsCount: response.products?.length || 0,
+        hasPagination: !!response.pagination,
+        hasFacets: !!response.facets,
+        facetsCount: response.facets?.length || 0
+      });
+    }
+
+    const products = (response.products || [])
+      .map(ebebekProduct => {
+        try {
+          return EbebekProductMapper.mapToProduct(ebebekProduct);
+        } catch (error) {
+          if (environment.features.enableLogging) {
+            console.warn('Failed to map product:', ebebekProduct.code, error);
+          }
+          return null;
+        }
+      })
+      .filter((product): product is Product => product !== null);
+
+    const result = {
+      products,
+      totalCount: response.pagination?.totalResults || 0,
+      currentPage: (response.pagination?.currentPage || 0) + 1,
+      pageSize: response.pagination?.pageSize || environment.app.defaultPageSize,
+      facets: response.facets,
+      breadcrumbs: response.breadcrumbs
+    };
+
+    if (environment.features.enableLogging) {
+      console.log('Mapped API response:', {
+        productsCount: result.products.length,
+        totalCount: result.totalCount,
+        currentPage: result.currentPage,
+        pageSize: result.pageSize,
+        hasValidProducts: result.products.every(p => p.id && p.name)
+      });
+    }
+
+    return result;
+  }
+
+  private getErrorMessage(error: any): string {
+    if (error instanceof HttpErrorResponse) {
+      switch (error.status) {
+        case 0:
+          return 'İnternet bağlantınızı kontrol ediniz.';
+        case 400:
+          return 'Geçersiz istek parametreleri.';
+        case 401:
+          return 'API yetkilendirme hatası.';
+        case 403:
+          return 'Bu işlem için yetkiniz bulunmuyor.';
+        case 404:
+          return 'Aradığınız ürün bulunamadı.';
+        case 429:
+          return 'Çok fazla istek gönderildi. Lütfen biraz bekleyip tekrar deneyiniz.';
+        case 500:
+        case 502:
+        case 503:
+          return 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyiniz.';
+        default:
+          return `Beklenmeyen hata oluştu (${error.status}). Lütfen tekrar deneyiniz.`;
+      }
+    } else if (error.name === 'TimeoutError') {
+      return `İstek zaman aşımına uğradı (${this.requestTimeout}ms). Lütfen tekrar deneyiniz.`;
+    } else if (!navigator.onLine) {
+      return 'İnternet bağlantınızı kontrol ediniz.';
+    } else {
+      return 'Bir hata oluştu. Lütfen tekrar deneyiniz.';
+    }
+  }
+
+  private logError(method: string, error: any, params?: any): void {
+    if (environment.features.enableLogging) {
+      console.error(`ProductService.${method} error:`, {
+        error: error.message || error,
+        status: error.status,
+        params,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+      });
+    }
+  }
+
+// Kategori listesi alma - API facet verilerinden
+  getCategories(): Observable<any[]> {
+    return this.getProducts().pipe(
+      map(response => response.facets?.find(f => f.code === 'category')?.values || []),
+      catchError(error => {
+        this.logError('getCategories', error);
+        return throwError(() => new Error('Kategoriler yüklenirken hata oluştu.'));
+      })
+    );
+  }
+
+  // Marka listesi alma - API facet verilerinden
+  getBrands(): Observable<any[]> {
+    return this.getProducts().pipe(
+      map(response => response.facets?.find(f => f.code === 'brand')?.values || []),
+      catchError(error => {
+        this.logError('getBrands', error);
+        return throwError(() => new Error('Markalar yüklenirken hata oluştu.'));
+      })
+    );
+  }
+
+  // Tüm facet verilerini alma
+  getFacets(): Observable<any[]> {
+    return this.getProducts().pipe(
+      map(response => response.facets || []),
+      catchError(error => {
+        this.logError('getFacets', error);
+        return throwError(() => new Error('Filtre verileri yüklenirken hata oluştu.'));
+      })
+    );
+  }
+
+  // Health check
+  healthCheck(): Observable<boolean> {
+    if (environment.features.enableApiMocking) {
+      return this.mockDataService.healthCheck();
+    }
+
+    const url = `${this.baseUrl}/health`;
+    const headers = this.getHeaders();
+
+    return this.http.get(url, { headers })
+      .pipe(
+        timeout(5000),
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  // Cache yönetimi için gelecekte kullanılabilir
+  private cacheKey(params: ProductQueryParams): string {
+    return `products_${JSON.stringify(params)}_${Date.now()}`;
+  }
+
+  // Performance monitoring
+  private startTimer(): number {
+    return performance.now();
+  }
+
+  private endTimer(startTime: number, operation: string): void {
+    if (environment.features.enableLogging) {
+      const duration = performance.now() - startTime;
+      console.log(`${operation} completed in ${duration.toFixed(2)}ms`);
+    }
+  }
+
+  // API durumunu kontrol et
+  getApiStatus(): Observable<{ healthy: boolean; responseTime: number }> {
+    const startTime = this.startTimer();
+    
+    return this.healthCheck().pipe(
+      map(healthy => ({
+        healthy,
+        responseTime: performance.now() - startTime
+      }))
+    );
   }
 }

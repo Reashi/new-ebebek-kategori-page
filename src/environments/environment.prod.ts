@@ -1,20 +1,20 @@
 export const environment = {
-  production: false,
+  production: true,
   
   // E-bebek API Configuration
   ebebekApi: {
     baseUrl: 'https://api2.e-bebek.com/ebebekwebservices/v2/ebebek',
-    timeout: 30000, // 30 seconds
-    retryAttempts: 3,
-    retryDelay: 1000, // 1 second
+    timeout: 10000, // 10 seconds for production
+    retryAttempts: 2,
+    retryDelay: 500,
   },
   
   // Feature Flags
   features: {
-    enableLogging: true,
-    enableApiMocking: false, // Gerçek API'yi kullan (false), Mock data için true yap
+    enableLogging: false, // Disable in production
+    enableApiMocking: false,
     enableAdvancedFilters: true,
-    enableRecommendations: false,
+    enableRecommendations: true,
     enableWishlist: true,
   },
   
@@ -24,13 +24,13 @@ export const environment = {
     version: '1.0.0',
     defaultPageSize: 12,
     maxPageSize: 48,
-    cacheTtl: 300000, // 5 minutes
+    cacheTtl: 600000, // 10 minutes in production
   },
   
   // UI Configuration
   ui: {
     theme: 'light',
     animations: true,
-    enableAnalytics: false,
+    enableAnalytics: true,
   }
 };
