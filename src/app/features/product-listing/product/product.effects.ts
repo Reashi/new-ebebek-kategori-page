@@ -219,21 +219,17 @@ export class ProductEffects {
     )
   );
 
-  // Filtre seçeneklerini yükle
+// Filtre seçeneklerini yükle - API facet verilerinden
   loadFilterOptions$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProductActions.loadFilterOptions),
       switchMap(() => {
-        const categories$ = this.productService.getCategories().pipe(
-          catchError(() => of([]))
-        );
-        const brands$ = this.productService.getBrands().pipe(
-          catchError(() => of([]))
-        );
-
-        return combineLatest([categories$, brands$]).pipe(
-          map(([categories, brands]) => 
-            ProductActions.loadFilterOptionsSuccess({ categories, brands })
+        return this.productService.getFacets().pipe(
+          map((facets) => 
+            ProductActions.loadFilterOptionsSuccess({ 
+              categories: facets.find(f => f.code === 'category')?.values || [],
+              brands: facets.find(f => f.code === 'brand')?.values || []
+            })
           ),
           catchError((error: any) => {
             console.error('Load filter options error:', error);

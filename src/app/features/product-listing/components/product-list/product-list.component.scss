@@ -1,9 +1,31 @@
 // src/app/features/product-listing/components/product-list/product-list.component.scss
 
-.product-list-container {
+.product-list-with-filters {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
   background: #f8f9fa;
   min-height: 100vh;
-  padding: 0;
+
+  // Filter Section - Sol taraf (%25)
+  .filter-section {
+    width: 25%;
+    max-width: 320px;
+    min-width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+  }
+
+  // Products Section - Sağ taraf (%75)
+  .products-section {
+    width: 75%;
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 // Header Section
@@ -174,23 +196,21 @@
   }
 }
 
-// Products Section
-.products-section {
-  .products-container {
-    margin-bottom: 40px;
+// Products Grid
+.products-container {
+  margin-bottom: 40px;
 
-    // Grid View
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+
     &.grid-view {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-
       .product-item {
         height: 100%;
       }
     }
 
-    // List View
     &.list-view {
       display: flex;
       flex-direction: column;
@@ -332,34 +352,51 @@
 
 // Responsive Design
 @media (max-width: 1200px) {
-  .products-container.grid-view {
+  .product-list-with-filters {
+    .filter-section {
+      width: 30%;
+      max-width: 300px;
+      min-width: 250px;
+    }
+
+    .products-section {
+      width: 70%;
+    }
+  }
+
+  .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 18px;
   }
 }
 
-@media (max-width: 992px) {
-  .list-header {
+@media (max-width: 1024px) {
+  .product-list-with-filters {
     flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
+    gap: 20px;
+    padding: 20px;
 
-    .list-title {
+    .filter-section {
+      width: 100%;
+      max-width: none;
       min-width: auto;
+      position: relative;
+      top: auto;
+      order: 1;
     }
 
-    .list-controls {
-      justify-content: space-between;
-      gap: 15px;
+    .products-section {
+      width: 100%;
+      order: 2;
     }
   }
 
-  .products-container.grid-view {
+  .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 15px;
   }
 
-  .products-container.list-view {
+  .products-grid.list-view {
     .product-item {
       ::ng-deep .product-card {
         flex-direction: column;
@@ -381,18 +418,30 @@
 }
 
 @media (max-width: 768px) {
-  .list-header {
+  .product-list-with-filters {
     padding: 15px;
-    margin-bottom: 15px;
+    gap: 15px;
+  }
 
-    .list-title h1 {
-      font-size: 1.5em;
+  .list-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    padding: 15px;
+
+    .list-title {
+      min-width: auto;
+
+      h1 {
+        font-size: 1.5em;
+      }
     }
 
     .list-controls {
+      justify-content: space-between;
+      gap: 15px;
       flex-direction: column;
       align-items: stretch;
-      gap: 10px;
     }
 
     .sort-options {
@@ -404,7 +453,7 @@
     }
   }
 
-  .products-container.grid-view {
+  .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
   }
@@ -424,15 +473,15 @@
     }
   }
 
-  .error-state .error-content,
-  .no-products-state .no-products-content {
+  .error-content,
+  .no-products-content {
     margin: 0 15px;
     padding: 30px 20px;
   }
 }
 
 @media (max-width: 480px) {
-  .products-container.grid-view {
+  .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 10px;
   }

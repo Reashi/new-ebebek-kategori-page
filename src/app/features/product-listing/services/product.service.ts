@@ -393,52 +393,37 @@ export class ProductService {
     }
   }
 
-  // Kategori listesi alma
+// Kategori listesi alma - API facet verilerinden
   getCategories(): Observable<any[]> {
-    if (environment.features.enableApiMocking) {
-      return this.mockDataService.getCategories();
-    }
-
-    const url = `${this.baseUrl}/categories`;
-    const headers = this.getHeaders();
-
-    return this.http.get<any>(url, { headers })
-      .pipe(
-        timeout(this.requestTimeout),
-        retry({
-          count: this.retryAttempts,
-          delay: this.retryDelay
-        }),
-        catchError(error => {
-          this.logError('getCategories', error);
-          // Fallback kategoriler
-          return this.mockDataService.getCategories();
-        })
-      );
+    return this.getProducts().pipe(
+      map(response => response.facets?.find(f => f.code === 'category')?.values || []),
+      catchError(error => {
+        this.logError('getCategories', error);
+        return throwError(() => new Error('Kategoriler yüklenirken hata oluştu.'));
+      })
+    );
   }
 
-  // Marka listesi alma
+  // Marka listesi alma - API facet verilerinden
   getBrands(): Observable<any[]> {
-    if (environment.features.enableApiMocking) {
-      return this.mockDataService.getBrands();
-    }
+    return this.getProducts().pipe(
+      map(response => response.facets?.find(f => f.code === 'brand')?.values || []),
+      catchError(error => {
+        this.logError('getBrands', error);
+        return throwError(() => new Error('Markalar yüklenirken hata oluştu.'));
+      })
+    );
+  }
 
-    const url = `${this.baseUrl}/brands`;
-    const headers = this.getHeaders();
-
-    return this.http.get<any>(url, { headers })
-      .pipe(
-        timeout(this.requestTimeout),
-        retry({
-          count: this.retryAttempts,
-          delay: this.retryDelay
-        }),
-        catchError(error => {
-          this.logError('getBrands', error);
-          // Fallback markalar
-          return this.mockDataService.getBrands();
-        })
-      );
+  // Tüm facet verilerini alma
+  getFacets(): Observable<any[]> {
+    return this.getProducts().pipe(
+      map(response => response.facets || []),
+      catchError(error => {
+        this.logError('getFacets', error);
+        return throwError(() => new Error('Filtre verileri yüklenirken hata oluştu.'));
+      })
+    );
   }
 
   // Health check
