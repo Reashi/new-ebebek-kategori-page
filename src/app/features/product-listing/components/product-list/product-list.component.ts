@@ -190,7 +190,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   loadProducts() {
-    this.store.dispatch(ProductActions.loadProducts({}));
+    // Artık bu action otomatik olarak current filters, page, pageSize ile çalışacak
+    this.store.dispatch(ProductActions.loadProducts());
   }
 
   onProductClick(productId: string) {
@@ -201,20 +202,24 @@ export class ProductListComponent implements OnInit, OnDestroy {
   onAddToCart(productId: string) {
     console.log('Sepete eklendi:', productId);
     // Burada gerçek sepete ekleme işlemi yapılacak
+    // this.cartService.addToCart(productId);
   }
 
   onAddToFavorites(productId: string) {
     console.log('Favorilere eklendi:', productId);
     // Burada gerçek favorilere ekleme işlemi yapılacak
+    // this.favoritesService.addToFavorites(productId);
   }
 
   onSortChange() {
     console.log('Sort by:', this.sortBy);
-    // Burada sorting logic implement edilecek
+    this.store.dispatch(ProductActions.setSortBy({ sortBy: this.sortBy }));
   }
 
   setViewMode(mode: 'grid' | 'list') {
     this.viewMode = mode;
+    // View mode'u localStorage'a kaydedebiliriz
+    // localStorage.setItem('productViewMode', mode);
   }
 
   clearAllFilters() {
@@ -222,23 +227,15 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   nextPage() {
-    this.paginationInfo$.pipe(takeUntil(this.destroy$)).subscribe(info => {
-      if (info.hasNextPage) {
-        this.store.dispatch(ProductActions.setPage({ page: info.currentPage + 1 }));
-      }
-    });
+    this.store.dispatch(ProductActions.nextPage());
   }
 
   previousPage() {
-    this.paginationInfo$.pipe(takeUntil(this.destroy$)).subscribe(info => {
-      if (info.hasPreviousPage) {
-        this.store.dispatch(ProductActions.setPage({ page: info.currentPage - 1 }));
-      }
-    });
+    this.store.dispatch(ProductActions.previousPage());
   }
 
   retryLoad() {
-    this.loadProducts();
+    this.store.dispatch(ProductActions.retryLastAction());
   }
 
   trackByProductId(index: number, product: Product): string {

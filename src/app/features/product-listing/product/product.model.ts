@@ -33,6 +33,7 @@ export interface ProductFilters {
   searchTerm?: string;
   inStockOnly?: boolean;
   onSaleOnly?: boolean;
+  isNew?: boolean;
 }
 
 export interface ProductState {
@@ -44,6 +45,10 @@ export interface ProductState {
   totalCount: number;
   currentPage: number;
   pageSize: number;
+  sortBy?: string;
+  lastAction?: string | null;  // null değerini kabul eder
+  availableCategories?: any[];
+  availableBrands?: any[];
 }
 
 // Filter seçenekleri için yardımcı interface'ler
