@@ -1,0 +1,176 @@
+<!-- src/app/features/product-listing/components/product-card/product-card.component.html -->
+<div 
+  class="product-card"
+  [class.loading]="loading"
+  [class.out-of-stock]="!product.inStock"
+  [class.on-sale]="product.isOnSale"
+  [attr.aria-label]="getProductAriaLabel()"
+  role="article">
+  
+  <!-- Product Image Section -->
+  <div class="product-image-wrapper" (click)="onProductClick()">
+    <!-- Loading Placeholder -->
+    <div *ngIf="loading" class="loading-placeholder">
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Actual Image or Placeholder -->
+    <div *ngIf="!loading" class="product-image-container">
+      <img 
+        *ngIf="product.imageUrl; else imagePlaceholder"
+        [src]="product.imageUrl" 
+        [alt]="product.name"
+        class="product-image"
+        loading="lazy">
+      
+      <ng-template #imagePlaceholder>
+        <div class="image-placeholder">
+          <span class="image-icon" aria-hidden="true">📷</span>
+          <span class="placeholder-text">Görsel Yükleniyor</span>
+        </div>
+      </ng-template>
+    </div>
+    
+    <!-- Sale Badge -->
+    <div *ngIf="hasDiscount()" class="sale-badge">
+      <span class="discount-text">%{{ getDiscountPercentage() }}</span>
+      <span class="discount-label">İndirim</span>
+    </div>
+    
+    <!-- Stock Overlay -->
+    <div *ngIf="!product.inStock" class="stock-overlay">
+      <span class="stock-text">Stok Yok</span>
+    </div>
+    
+    <!-- Favorite Button -->
+    <button 
+      class="favorite-btn"
+      (click)="onAddToFavorites($event)"
+      [disabled]="loading"
+      [attr.aria-label]="'Favorilere ekle: ' + product.name"
+      title="Favorilere Ekle">
+      <span class="heart-icon" aria-hidden="true">♡</span>
+    </button>
+  </div>
+  
+  <!-- Product Information Section -->
+  <div class="product-info">
+    <!-- Brand -->
+    <div class="product-brand" *ngIf="product.brandId">
+      {{ getBrandName() }}
+    </div>
+    
+    <!-- Product Name -->
+    <h3 class="product-name" (click)="onProductClick()">
+      {{ product.name }}
+    </h3>
+    
+    <!-- Rating Section -->
+    <div class="product-rating" *ngIf="product.rating">
+      <div class="stars" [attr.aria-label]="product.rating + ' yıldız'">
+        <span 
+          *ngFor="let star of getStarsArray(); let i = index" 
+          class="star"
+          [class.filled]="star.filled"
+          [attr.aria-hidden]="true">
+          ★
+        </span>
+      </div>
+      <span class="rating-text">
+        {{ product.rating.toFixed(1) }}
+      </span>
+      <span class="review-count" *ngIf="product.reviewCount">
+        ({{ product.reviewCount }})
+      </span>
+    </div>
+    
+    <!-- Colors Section -->
+    <div class="product-colors" *ngIf="product.colors && product.colors.length > 0">
+      <span class="colors-label">Renkler:</span>
+      <div class="color-options">
+        <div 
+          *ngFor="let color of product.colors.slice(0, 4)" 
+          class="color-dot"
+          [style.background-color]="getColorHex(color)"
+          [title]="getColorName(color)"
+          [attr.aria-label]="getColorName(color)">
+        </div>
+        <span *ngIf="product.colors.length > 4" class="more-colors">
+          +{{ product.colors.length - 4 }}
+        </span>
+      </div>
+    </div>
+    
+    <!-- Sizes Section -->
+    <div class="product-sizes" *ngIf="product.sizes && product.sizes.length > 0">
+      <span class="sizes-label">Bedenler:</span>
+      <div class="size-tags">
+        <span *ngFor="let size of product.sizes.slice(0, 3)" class="size-tag">
+          {{ size }}
+        </span>
+        <span *ngIf="product.sizes.length > 3" class="more-sizes">
+          +{{ product.sizes.length - 3 }}
+        </span>
+      </div>
+    </div>
+    
+    <!-- Price Section -->
+    <div class="price-section">
+      <div class="current-price">
+        {{ formatPrice(product.price) }}
+      </div>
+      
+      <div *ngIf="hasDiscount()" class="price-comparison">
+        <div class="original-price">
+          {{ formatPrice(product.originalPrice!) }}
+        </div>
+        <div class="savings">
+          {{ formatPrice(product.originalPrice! - product.price) }} tasarruf
+        </div>
+      </div>
+    </div>
+    
+    <!-- Shipping Info -->
+    <div class="shipping-info" *ngIf="product.inStock">
+      <span class="shipping-icon" aria-hidden="true">🚚</span>
+      <span class="shipping-text">Ücretsiz Kargo</span>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="product-actions">
+      <!-- Add to Cart Button -->
+      <button 
+        class="add-to-cart-btn"
+        [class.primary]="product.inStock"
+        [class.disabled]="!product.inStock"
+        [disabled]="!product.inStock || loading"
+        (click)="onAddToCart($event)"
+        [attr.aria-label]="product.inStock ? 'Sepete ekle: ' + product.name : 'Stokta yok'">
+        
+        <span *ngIf="loading" class="btn-spinner"></span>
+        <span *ngIf="!loading" class="cart-icon" aria-hidden="true">🛒</span>
+        <span class="btn-text">
+          {{ product.inStock ? 'Sepete Ekle' : 'Stok Yok' }}
+        </span>
+      </button>
+      
+      <!-- Quick View Button -->
+      <button 
+        class="quick-view-btn"
+        [disabled]="loading"
+        (click)="onProductClick()"
+        [attr.aria-label]="'Hızlı görüntüle: ' + product.name"
+        title="Hızlı Görüntüle">
+        <span class="eye-icon" aria-hidden="true">👁</span>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Loading Overlay -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">Yükleniyor...</span>
+    </div>
+  </div>
+</div>

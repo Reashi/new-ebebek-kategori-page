@@ -1,21 +1,13 @@
 // src/app/app.component.ts
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from './shared/header/header.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  template: `
-    <div class="app-container">
-      <router-outlet />
-    </div>
-  `,
-  styles: [`
-    .app-container {
-      min-height: 100vh;
-      background: #f8f9fa;
-    }
-  `]
+  imports: [RouterOutlet, HeaderComponent],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss'
 })
 export class AppComponent {
   title = 'ebebek-kategori-page';
