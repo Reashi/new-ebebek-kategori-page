@@ -15,14 +15,9 @@ import * as ProductSelectors from '../../product/product.selectors';
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductCardComponent, FilterSidebarComponent],
+  imports: [CommonModule, FormsModule, ProductCardComponent],
   template: `
-    <div class="product-list-with-filters">
-      <!-- Filter Sidebar -->
-      <div class="filter-section">
-        <app-filter-sidebar #filterSidebar></app-filter-sidebar>
-      </div>
-      
+    <div class="product-list-with-filters">     
       <!-- Product List -->
       <div class="products-section">
         <!-- List Header -->
