@@ -152,7 +152,7 @@ export interface EbebekQuery {
 }
 
 // Product Mapper - E-bebek API'den gelen veriyi internal Product modeline çevirir
-import { Product } from './product.model';
+import { Product } from '../product/product.model';
 
 export class EbebekProductMapper {
   static mapToProduct(ebebekProduct: EbebekProduct): Product {
