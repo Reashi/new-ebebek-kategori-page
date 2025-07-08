@@ -1,8 +1,9 @@
-// src/app/features/product-listing/product/product.effects.ts
+// src/app/features/product-listing/product/product.effects.ts - Updated with Facets Support
+
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { of, combineLatest } from 'rxjs';
+import { of, combineLatest, Observable } from 'rxjs';
 import { map, catchError, switchMap, tap, take } from 'rxjs/operators';
 
 import * as ProductActions from './product.actions';
@@ -37,7 +38,7 @@ export class ProductEffects {
     )
   );
 
-  // Parametrelerle ürün yükleme
+  // Parametrelerle ürün yükleme - Geliştirilmiş versiyon
   loadProductsWithParams$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProductActions.loadProductsWithParams),
@@ -48,14 +49,26 @@ export class ProductEffects {
           pageSize,
           sortBy
         }).pipe(
-          map((response: ProductResponse) => 
-            ProductActions.loadProductsSuccess({
+          map((response: ProductResponse) => {
+            // Facets verisi varsa filter sidebar'ı güncelle
+            if (response.facets && response.facets.length > 0) {
+              // Filter sidebar'a facets verisini gönder (action eklenecek)
+              this.store.dispatch(ProductActions.updateFilterOptions({
+                facets: response.facets,
+                availableColors: response.availableColors || [],
+                availableSizes: response.availableSizes || [],
+                availableGenders: response.availableGenders || []
+              }));
+            }
+            
+            return ProductActions.loadProductsSuccess({
               products: response.products,
               totalCount: response.totalCount,
               currentPage: response.currentPage,
-              pageSize: response.pageSize
-            })
-          ),
+              pageSize: response.pageSize,
+              facets: response.facets
+            });
+          }),
           catchError((error: any) => {
             console.error('Load products with params error:', error);
             return of(ProductActions.loadProductsFailure({ 
@@ -67,7 +80,7 @@ export class ProductEffects {
     )
   );
 
-  // Ürün arama
+  // Ürün arama - Geliştirilmiş versiyon
   searchProducts$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProductActions.searchProducts),
@@ -82,15 +95,26 @@ export class ProductEffects {
               page: 1,
               pageSize
             }).pipe(
-              map((response: ProductResponse) => 
-                ProductActions.searchProductsSuccess({
+              map((response: ProductResponse) => {
+                // Facets verisi varsa filter sidebar'ı güncelle
+                if (response.facets && response.facets.length > 0) {
+                  this.store.dispatch(ProductActions.updateFilterOptions({
+                    facets: response.facets,
+                    availableColors: response.availableColors || [],
+                    availableSizes: response.availableSizes || [],
+                    availableGenders: response.availableGenders || []
+                  }));
+                }
+                
+                return ProductActions.searchProductsSuccess({
                   products: response.products,
                   totalCount: response.totalCount,
                   currentPage: response.currentPage,
                   pageSize: response.pageSize,
-                  searchTerm
-                })
-              ),
+                  searchTerm,
+                  facets: response.facets
+                });
+              }),
               catchError((error: any) => {
                 console.error('Search products error:', error);
                 return of(ProductActions.searchProductsFailure({ 
@@ -219,18 +243,40 @@ export class ProductEffects {
     )
   );
 
-// Filtre seçeneklerini yükle - API facet verilerinden
+  // Filtre seçeneklerini yükle - Düzeltilmiş versiyon
   loadFilterOptions$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProductActions.loadFilterOptions),
       switchMap(() => {
-        return this.productService.getFacets().pipe(
-          map((facets) => 
-            ProductActions.loadFilterOptionsSuccess({ 
-              categories: facets.find(f => f.code === 'category')?.values || [],
-              brands: facets.find(f => f.code === 'brand')?.values || []
-            })
-          ),
+        // İlk önce basit bir ürün listesi çek ki facets verisini alalım
+        return this.productService.getProducts({
+          page: 1,
+          pageSize: 1 // Sadece facets için, çok az ürün yeter
+        }).pipe(
+          switchMap((response: ProductResponse) => {
+            if (response.facets && response.facets.length > 0) {
+              return of(ProductActions.updateFilterOptions({
+                facets: response.facets,
+                availableColors: response.availableColors || [],
+                availableSizes: response.availableSizes || [],
+                availableGenders: response.availableGenders || []
+              }));
+            } else {
+              // Fallback olarak kategoriler ve markalar yükle
+              const categories$ = this.productService.getCategories().pipe(
+                catchError(() => of([]))
+              );
+              const brands$ = this.productService.getBrands().pipe(
+                catchError(() => of([]))
+              );
+
+              return combineLatest([categories$, brands$]).pipe(
+                map(([categories, brands]) => 
+                  ProductActions.loadFilterOptionsSuccess({ categories, brands })
+                )
+              );
+            }
+          }),
           catchError((error: any) => {
             console.error('Load filter options error:', error);
             return of(ProductActions.loadFilterOptionsFailure({ 
@@ -276,11 +322,29 @@ export class ProductEffects {
     )
   );
 
+  // Filter seçenekleri güncellendiğinde log
+  filterOptionsUpdated$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ProductActions.updateFilterOptions),
+      tap(({ facets, availableColors, availableSizes, availableGenders }) => {
+        console.log('Filter options updated:', {
+          facetsCount: facets?.length || 0,
+          colorsCount: availableColors?.length || 0,
+          sizesCount: availableSizes?.length || 0,
+          gendersCount: availableGenders?.length || 0
+        });
+      })
+    ),
+    { dispatch: false }
+  );
+
   // Debug için action logging
   logActions$ = createEffect(() =>
     this.actions$.pipe(
       tap((action) => {
-        console.log('NgRx Action:', action);
+        if (action.type.includes('[Product')) {
+          console.log('NgRx Product Action:', action.type);
+        }
       })
     ),
     { dispatch: false }
@@ -296,7 +360,16 @@ export class ProductEffects {
         ProductActions.loadFilterOptionsFailure
       ),
       tap((action) => {
-        console.error('API Error:', action.error);
+        console.error('Product API Error:', action.error);
+        
+        // Hata türüne göre özel işlemler yapılabilir
+        if (action.error.includes('yetkilendirme')) {
+          // Auth error handling
+          console.warn('API yetkilendirme sorunu. Token kontrol edilmeli.');
+        } else if (action.error.includes('zaman aşımı')) {
+          // Timeout error handling
+          console.warn('API zaman aşımı. Bağlantı kontrolü yapılmalı.');
+        }
       })
     ),
     { dispatch: false }

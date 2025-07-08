@@ -1,4 +1,5 @@
-// src/app/features/product-listing/product/product.reducer.ts
+// src/app/features/product-listing/product/product.reducer.ts - Updated with Facets Support
+
 import { createReducer, on } from '@ngrx/store';
 import { ProductState } from './product.model';
 import * as ProductActions from './product.actions';
@@ -15,7 +16,14 @@ export const initialState: ProductState = {
   sortBy: 'relevance',
   lastAction: null,
   availableCategories: [],
-  availableBrands: []
+  availableBrands: [],
+  // Yeni eklenen facets desteği
+  availableColors: [],
+  availableSizes: [],
+  availableGenders: [],
+  availableRatings: [],
+  facets: [],
+  filterError: null
 };
 
 export const productReducer = createReducer(
@@ -26,6 +34,7 @@ export const productReducer = createReducer(
     ...state,
     loading: true,
     error: null,
+    filterError: null,
     lastAction: 'loadProducts'
   })),
 
@@ -33,6 +42,7 @@ export const productReducer = createReducer(
     ...state,
     loading: true,
     error: null,
+    filterError: null,
     filters: filters ? { ...state.filters, ...filters } : state.filters,
     currentPage: page || state.currentPage,
     pageSize: pageSize || state.pageSize,
@@ -40,14 +50,16 @@ export const productReducer = createReducer(
     lastAction: 'loadProductsWithParams'
   })),
 
-  on(ProductActions.loadProductsSuccess, (state, { products, totalCount, currentPage, pageSize }) => ({
+  on(ProductActions.loadProductsSuccess, (state, { products, totalCount, currentPage, pageSize, facets }) => ({
     ...state,
     products,
     totalCount,
     currentPage,
     pageSize,
     loading: false,
-    error: null
+    error: null,
+    filterError: null,
+    facets: facets || state.facets
   })),
 
   on(ProductActions.loadProductsFailure, (state, { error }) => ({
@@ -63,10 +75,11 @@ export const productReducer = createReducer(
     ...state,
     loading: true,
     error: null,
+    filterError: null,
     lastAction: 'searchProducts'
   })),
 
-  on(ProductActions.searchProductsSuccess, (state, { products, totalCount, currentPage, pageSize, searchTerm }) => ({
+  on(ProductActions.searchProductsSuccess, (state, { products, totalCount, currentPage, pageSize, searchTerm, facets }) => ({
     ...state,
     products,
     totalCount,
@@ -74,10 +87,12 @@ export const productReducer = createReducer(
     pageSize,
     loading: false,
     error: null,
+    filterError: null,
     filters: {
       ...state.filters,
       searchTerm
-    }
+    },
+    facets: facets || state.facets
   })),
 
   on(ProductActions.searchProductsFailure, (state, { error }) => ({
@@ -118,13 +133,15 @@ export const productReducer = createReducer(
   on(ProductActions.setFilters, (state, { filters }) => ({
     ...state,
     filters: { ...state.filters, ...filters },
-    currentPage: 1 // Reset to first page when filtering
+    currentPage: 1, // Reset to first page when filtering
+    filterError: null
   })),
 
   on(ProductActions.clearFilters, (state) => ({
     ...state,
     filters: {},
-    currentPage: 1
+    currentPage: 1,
+    filterError: null
   })),
 
   on(ProductActions.addFilter, (state, { filterType, value }) => {
@@ -147,7 +164,8 @@ export const productReducer = createReducer(
         ...state.filters,
         [filterType]: newValues
       },
-      currentPage: 1
+      currentPage: 1,
+      filterError: null
     };
   }),
 
@@ -160,7 +178,8 @@ export const productReducer = createReducer(
       return {
         ...state,
         filters: remainingFilters,
-        currentPage: 1
+        currentPage: 1,
+        filterError: null
       };
     }
 
@@ -172,7 +191,8 @@ export const productReducer = createReducer(
           ...state.filters,
           [filterType]: newValues.length > 0 ? newValues : undefined
         },
-        currentPage: 1
+        currentPage: 1,
+        filterError: null
       };
     }
 
@@ -181,7 +201,8 @@ export const productReducer = createReducer(
       return {
         ...state,
         filters: remainingFilters,
-        currentPage: 1
+        currentPage: 1,
+        filterError: null
       };
     }
 
@@ -216,18 +237,19 @@ export const productReducer = createReducer(
     currentPage: Math.max(1, state.currentPage - 1)
   })),
 
-  // Filter Options
+  // Filter Options - Original
   on(ProductActions.loadFilterOptions, (state) => ({
     ...state,
     loading: true,
-    error: null
+    error: null,
+    filterError: null
   })),
 
   on(ProductActions.loadFilterOptionsSuccess, (state, { categories, brands }) => ({
     ...state,
     loading: false,
     error: null,
-    // Categories ve brands'i state'e ekleyelim
+    filterError: null,
     availableCategories: categories,
     availableBrands: brands
   })),
@@ -235,7 +257,38 @@ export const productReducer = createReducer(
   on(ProductActions.loadFilterOptionsFailure, (state, { error }) => ({
     ...state,
     loading: false,
-    error
+    error,
+    filterError: error
+  })),
+
+  // Facets Support - Yeni eklenenler
+  on(ProductActions.updateFilterOptions, (state, { facets, availableColors, availableSizes, availableGenders }) => ({
+    ...state,
+    facets: facets || state.facets,
+    availableColors: availableColors || state.availableColors,
+    availableSizes: availableSizes || state.availableSizes,
+    availableGenders: availableGenders || state.availableGenders,
+    filterError: null
+  })),
+
+  on(ProductActions.updateFilterOptionsSuccess, (state, { availableColors, availableSizes, availableGenders, availableRatings }) => ({
+    ...state,
+    availableColors,
+    availableSizes,
+    availableGenders,
+    availableRatings: availableRatings || state.availableRatings,
+    filterError: null
+  })),
+
+  // Filter Error Handling
+  on(ProductActions.showFilterError, (state, { message }) => ({
+    ...state,
+    filterError: message
+  })),
+
+  on(ProductActions.clearFilterError, (state) => ({
+    ...state,
+    filterError: null
   })),
 
   // Reset
@@ -245,6 +298,44 @@ export const productReducer = createReducer(
   on(ProductActions.retryLastAction, (state) => ({
     ...state,
     loading: true,
-    error: null
-  }))
+    error: null,
+    filterError: null
+  })),
+
+  // Analytics - Optional tracking
+  on(ProductActions.trackFilterUsage, (state, { filterType, filterValue, timestamp }) => {
+    // Bu analytics için kullanılabilir, state'i değiştirmek gerekmiyor
+    console.log(`Filter used: ${filterType} = ${filterValue} at ${new Date(timestamp).toISOString()}`);
+    return state;
+  }),
+
+  on(ProductActions.trackSearchQuery, (state, { searchTerm, resultCount, timestamp }) => {
+    // Bu analytics için kullanılabilir, state'i değiştirmek gerekmiyor
+    console.log(`Search performed: "${searchTerm}" returned ${resultCount} results at ${new Date(timestamp).toISOString()}`);
+    return state;
+  })
 );
+
+// Selector yardımcı fonksiyonları
+export const getFilterErrorMessage = (state: ProductState): string | null => {
+  return state.filterError;
+};
+
+export const getAvailableFilterOptions = (state: ProductState) => ({
+  colors: state.availableColors,
+  sizes: state.availableSizes,
+  genders: state.availableGenders,
+  ratings: state.availableRatings,
+  categories: state.availableCategories,
+  brands: state.availableBrands
+});
+
+export const hasFilterData = (state: ProductState): boolean => {
+  return !!(
+    state.availableColors?.length ||
+    state.availableSizes?.length ||
+    state.availableGenders?.length ||
+    state.availableRatings?.length ||
+    state.facets?.length
+  );
+};
