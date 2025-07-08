@@ -1,4 +1,4 @@
-// src/app/features/product-listing/services/product.service.ts - Enhanced Query Building
+// src/app/features/product-listing/services/product.service.ts - Fixed Version
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
@@ -161,7 +161,7 @@ export class ProductService {
     const query = this.buildQuery(params.filters, params.sortBy);
     httpParams = httpParams.set('query', query);
 
-    if (environment.features.enableLogging) {
+    if (environment.features?.enableLogging) {
       console.log('Built HTTP params:', httpParams.toString());
     }
 
@@ -176,7 +176,7 @@ export class ProductService {
       ',potentialPromotions(FULL),discountRate,brandName,hasOwnPackage',
       ',internetProduct,configuratorType,price(FULL),images(DEFAULT)',
       ',stock(FULL),numberOfReviews,averageRating,baseOptions(FULL)',
-      ',variantOptions(FULL),url,categories(FULL),baseProduct', // variantOptions dahil edildi
+      ',variantOptions(FULL),url,categories(FULL),baseProduct',
       ',isVideoActive,isArActive,vendor',
       ')',
       ',facets(FULL),breadcrumbs,pagination(DEFAULT),sorts(DEFAULT)',
@@ -292,7 +292,7 @@ export class ProductService {
 
     const finalQuery = queryParts.join(':');
     
-    if (environment.features.enableLogging) {
+    if (environment.features?.enableLogging) {
       console.log('Built query:', finalQuery);
     }
 
@@ -378,80 +378,7 @@ export class ProductService {
     if (!facets) return [];
     
     const sizeFacet = facets.find(f => f.code === 'size');
-    if (!sizeFacet || !sizeFacet.values) return [];
-
-    return sizeFacet.values.slice(0, 3).map(sizeValue => sizeValue.name);
-  }
-
-  // RGB kodundan renk adına çevirme
-  private static mapRgbToColorName(rgbCode: string, apiName: string): string {
-    // Önce API'den gelen adı kullan
-    if (apiName && apiName !== rgbCode) {
-      return this.mapColorName(apiName);
-    }
-
-    // RGB kod varsa çevir
-    const rgbMap: { [key: string]: string } = {
-      '0;0;255': 'mavi',
-      '255;0;0': 'kirmizi',
-      '0;128;0': 'yesil',
-      '255;255;0': 'sari',
-      '255;0;255': 'pembe',
-      '128;0;128': 'mor',
-      '255;165;0': 'turuncu',
-      '165;42;42': 'kahverengi',
-      '128;128;128': 'gri',
-      '0;0;0': 'siyah',
-      '255;255;255': 'beyaz',
-      '194;178;128': 'krem'
-    };
-
-    return rgbMap[rgbCode] || rgbCode;
-  }
-
-  private static mapColorName(colorValue: string): string {
-    const colorMap: { [key: string]: string } = {
-      'Mavi': 'mavi',
-      'Kırmızı': 'kirmizi',
-      'Yeşil': 'yesil',
-      'Sarı': 'sari',
-      'Pembe': 'pembe',
-      'Mor': 'mor',
-      'Turuncu': 'turuncu',
-      'Kahverengi': 'kahverengi',
-      'Gri': 'gri',
-      'Siyah': 'siyah',
-      'Beyaz': 'beyaz',
-      'Lacivert': 'lacivert',
-      'Turkuaz': 'turkuaz',
-      'Krem': 'krem',
-      'Ekru': 'krem',
-      'Karışık Renkli': 'karisik'
-    };
-    
-    return colorMap[colorValue] || colorValue.toLowerCase();
-  }
-}
-
-// Interface'leri güncelleyelim
-export interface ProductQueryParams {
-  filters?: ProductFilters;
-  page?: number;
-  pageSize?: number;
-  sortBy?: string;
-}
-
-export interface ProductResponse {
-  products: Product[];
-  totalCount: number;
-  currentPage: number;
-  pageSize: number;
-  facets?: any[];
-  breadcrumbs?: any[];
-  availableColors?: any[];
-  availableSizes?: any[];
-  availableGenders?: any[];
-}?.values) return [];
+    if (!sizeFacet?.values) return [];
 
     return sizeFacet.values.map(value => ({
       id: value.code,
@@ -523,7 +450,7 @@ export interface ProductResponse {
   }
 
   private logError(method: string, error: any, params?: any): void {
-    if (environment.features.enableLogging) {
+    if (environment.features?.enableLogging) {
       console.error(`ProductService.${method} error:`, {
         error,
         params,
@@ -532,7 +459,7 @@ export interface ProductResponse {
     }
   }
 
-  // Diğer metodlar aynı kalıyor...
+  // Diğer metodlar
   getProductById(id: string): Observable<Product> {
     const url = `${this.baseUrl}/products/${id}`;
     const headers = this.getHeaders();
@@ -589,7 +516,7 @@ export interface ProductResponse {
   }
 }
 
-// Güncellenmiş EbebekProductMapper
+// EbebekProductMapper class
 export class EbebekProductMapper {
   static mapToProduct(ebebekProduct: EbebekProduct, facets?: EbebekFacet[]): Product {
     return {
@@ -634,8 +561,8 @@ export class EbebekProductMapper {
       .replace(/^-|-$/g, '');
   }
 
-  // Variantlardan renk çıkarma (orijinal method)
-  private static extractColors(variantOptions: any[]): string[] | null {
+  // Variantlardan renk çıkarma
+  private static extractColors(variantOptions?: any[]): string[] | null {
     if (!variantOptions) return null;
     
     const colorOption = variantOptions.find(option => 
@@ -644,7 +571,7 @@ export class EbebekProductMapper {
     );
     
     if (colorOption && colorOption.variantOptionQualifiers) {
-      return colorOption.variantOptionQualifiers.map(qualifier => 
+      return colorOption.variantOptionQualifiers.map((qualifier: any) => 
         this.mapColorName(qualifier.value)
       );
     }
@@ -652,8 +579,8 @@ export class EbebekProductMapper {
     return null;
   }
 
-  // Variantlardan beden çıkarma (orijinal method)
-  private static extractSizes(variantOptions: any[]): string[] | null {
+  // Variantlardan beden çıkarma
+  private static extractSizes(variantOptions?: any[]): string[] | null {
     if (!variantOptions) return null;
     
     const sizeOption = variantOptions.find(option => 
@@ -664,14 +591,14 @@ export class EbebekProductMapper {
     );
     
     if (sizeOption && sizeOption.variantOptionQualifiers) {
-      return sizeOption.variantOptionQualifiers.map(qualifier => qualifier.value);
+      return sizeOption.variantOptionQualifiers.map((qualifier: any) => qualifier.value);
     }
     
     return null;
   }
 
-  // Kategorilerden cinsiyet çıkarma (orijinal method)
-  private static extractGender(categories: any[]): 'erkek' | 'kız' | 'unisex' | null {
+  // Kategorilerden cinsiyet çıkarma
+  private static extractGender(categories?: any[]): 'erkek' | 'kız' | 'unisex' | null {
     if (!categories) return null;
     
     const categoryNames = categories.map(cat => cat.name.toLowerCase()).join(' ');
@@ -686,7 +613,7 @@ export class EbebekProductMapper {
   }
 
   // Kategori isimlerinden cinsiyet çıkarma (fallback)
-  private static extractGenderFromCategories(categoryNames: string[]): 'erkek' | 'kız' | 'unisex' {
+  private static extractGenderFromCategories(categoryNames?: string[]): 'erkek' | 'kız' | 'unisex' {
     if (!categoryNames) return 'unisex';
     
     const categories = categoryNames.join(' ').toLowerCase();
@@ -771,13 +698,3 @@ export class EbebekProductMapper {
     return colorMap[colorValue] || colorValue.toLowerCase();
   }
 }
-
-  // Facets'den beden çıkarma (fallback)
-  private static extractSizesFromFacets(facets?: EbebekFacet[]): string[] {
-    if (!facets) return [];
-    
-    const sizeFacet = facets.find(facet => facet.code === 'size');
-    if (!sizeFacet || !sizeFacet.values) return [];
-
-    return sizeFacet.values.slice(0, 3).map(sizeValue => sizeValue.name);
-  }

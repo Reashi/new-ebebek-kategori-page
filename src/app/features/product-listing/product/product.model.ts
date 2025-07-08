@@ -1,10 +1,10 @@
-// src/app/features/product-listing/product/product.model.ts - Updated with Facets Support
+// src/app/features/product-listing/product/product.model.ts - Updated with RatingOption
 
 export interface Product {
   id: string;
   name: string;
   price: number;
-  originalPrice?: number; // İndirim hesaplamak için
+  originalPrice?: number;
   description: string;
   imageUrl: string;
   categoryId: string;
@@ -88,28 +88,28 @@ export interface ColorOption {
   id: string;
   name: string;
   hexCode: string;
-  rgbCode?: string; // API'den gelen RGB kodu
+  rgbCode?: string;
   count?: number;
 }
 
 export interface SizeOption {
   id: string;
   name: string;
-  category?: string; // Yaş grubu, beden kategorisi vb.
+  category?: string;
   count?: number;
 }
 
 export interface GenderOption {
   id: string;
   name: string;
-  apiCode?: string; // API'den gelen orijinal kod
+  apiCode?: string;
   count?: number;
 }
 
 export interface RatingOption {
   value: number;
   count: number;
-  label?: string; // "4 yıldız ve üzeri" gibi
+  label?: string;
 }
 
 // Facets için tip tanımları
