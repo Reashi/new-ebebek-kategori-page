@@ -19,7 +19,7 @@ import * as ProductSelectors from '../../product/product.selectors';
   template: `
     <div class="product-list-with-filters">     
       <!-- Product List -->
-      <div class="products-section">
+      <div class="products-section"> 
         <!-- List Header -->
         <div class="list-header">
           <div class="list-title">

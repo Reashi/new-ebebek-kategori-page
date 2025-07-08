@@ -13,6 +13,7 @@ export interface EbebekApiResponse {
 }
 
 export interface EbebekProduct {
+  description: string;
   code: string;
   name: string;
   categoryCodes: string[];

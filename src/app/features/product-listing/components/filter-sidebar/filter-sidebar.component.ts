@@ -1,4 +1,5 @@
-// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts
+// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts - Updated
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,187 +19,45 @@ import * as ProductSelectors from '../../product/product.selectors';
   styleUrls: ['./filter-sidebar.component.scss']
 })
 export class FilterSidebarComponent implements OnInit, OnDestroy {
-  updateFacetsFromApiResponse(facets: any[]) {
-    throw new Error('Method not implemented.');
-  }
   private destroy$ = new Subject<void>();
 
   // Observables
   filters$: Observable<ProductFilters>;
   hasActiveFilters$: Observable<boolean>;
 
-  // Filter data - API'den gelen kategoriler
-
+  // Filter data - Bunlar API'den gelecek
   categories: Category[] = [
-    { id: '7062', name: '2 Kapılı Dolaplar' },
-    { id: '20002', name: '2 Numara' },
-    { id: '7061', name: '3 Kapılı Dolap' },
-    { id: '20003', name: '3 Numara' },
-    { id: '4563', name: '3 Tekerlekli Bebek Bisikletleri' },
-    { id: '20004', name: '4 Numara' },
-    { id: '20005', name: '5 Numara' },
-    { id: '20006', name: '6 Numara' },
-    { id: '20007', name: '7 Numara' },
-    { id: '7051', name: 'Ahşap Beşik' },
-    { id: '7131', name: 'Ahşap Sandalye' },
-    { id: '7121', name: 'Ahşap Çocuk Masaları' },
-    { id: '4555', name: 'Akülü Araba' },
-    { id: '4545', name: 'Anne Baba Eğitim Kitapları' },
-    { id: '10117', name: 'Ara Katlı Park Yatak' },
-    { id: '4535', name: 'Atıştırmalık Mama' },
-    { id: '4464', name: 'Bavul' },
-    { id: '4528', name: 'Bebek Aktiviteli Oyuncak' },
-    { id: '4525', name: 'Bebek Alıştırma Bardağı' },
-    { id: '4450', name: 'Bebek Blokları' },
-    { id: '4438', name: 'Bebek Boyama Kitabı' },
-    { id: '4352', name: 'Bebek Gelişim Kitabı' },
-    { id: '3730', name: 'Bebek Kitapları' },
-    { id: '4598', name: 'Bebek Mama Taşıma Kabı' },
-    { id: '4263', name: 'Bebek Masal Kitabı' },
-    { id: '4108', name: 'Bebek Tabak, Çatal, Kaşık' },
-    { id: '4025', name: 'Biberon' },
-    { id: '7074', name: 'Büyüyen Bebek Karyolaları' },
-    { id: '10115', name: 'Islak Mendil' },
-    { id: '3877', name: 'Kavanoz Mama' },
-    { id: '3882', name: 'Kaşık Maması' },
-    { id: '3875', name: 'Keçi Sütü Maması' },
-    { id: '10104', name: 'Külot Bebek Bezi' },
-    { id: '7072', name: 'Montessori Karyolalar' },
-    { id: '3847', name: 'Organik Bebek Yiyecekleri' },
-    { id: '7152', name: 'Oyun Çadırları' },
-    { id: '3837', name: 'Oyuncak Araba Seti' },
-    { id: '3801', name: 'Sterilizatör' },
-    { id: '3796', name: 'Süt Saklama Poşeti ve Kabı' },
-    { id: '3731', name: 'Zeka Eğitim Seti Kitabı' }
+    { id: 'strollers', name: 'Bebek Arabaları' },
+    { id: 'food', name: 'Mama & Beslenme' },
+    { id: 'toys', name: 'Oyuncaklar' },
+    { id: 'feeding', name: 'Emzirme & Beslenme' },
+    { id: 'safety', name: 'Güvenlik' },
+    { id: 'care', name: 'Bakım & Hijyen' },
+    { id: 'car-seats', name: 'Oto Koltuğu' },
+    { id: 'diapers', name: 'Bez & Islak Mendil' },
+    { id: 'bath', name: 'Banyo' },
+    { id: 'sleep', name: 'Uyku' }
   ];
 
-  // API'den gelen markalar - güncellenmiş liste
   brands: Brand[] = [
-    { id: '7607', name: '59S', productCount: 3 },
-    { id: '7645', name: 'Adeda Yayıncılık', productCount: 4 },
-    { id: '1037', name: 'Agu Baby', productCount: 1 },
-    { id: '9970', name: 'Agubugu Baby', productCount: 1 },
-    { id: '1998', name: 'Altın Kitaplar', productCount: 51 },
-    { id: '1805', name: 'Aqara', productCount: 1 },
-    { id: '689', name: 'Baby Memory Prints', productCount: 2 },
-    { id: '1536', name: 'Baby Turco', productCount: 4 },
-    { id: '798', name: 'BabyBjörn', productCount: 15 },
-    { id: '9974', name: 'Babycim', productCount: 1 },
-    { id: '459', name: 'Babyjem', productCount: 27 },
-    { id: '1162', name: 'Babywhen', productCount: 4 },
-    { id: '2010', name: 'Bal Oyuncak', productCount: 1 },
-    { id: '1179', name: 'Bamm Bamm', productCount: 2 },
-    { id: '2526', name: 'Barbie', productCount: 10 },
-    { id: '6251', name: 'Bebekonfor', productCount: 13 },
-    { id: '3624', name: 'BetaKids', productCount: 8 },
-    { id: '1619', name: 'Bingo', productCount: 1 },
-    { id: '1932', name: 'Birlik Oyuncak', productCount: 4 },
-    { id: '1354', name: 'Bondigo', productCount: 2 },
-    { id: '1629', name: 'Brita', productCount: 4 },
-    { id: '513', name: 'Canbebe', productCount: 6 },
-    { id: '185', name: 'Chicco', productCount: 2 },
-    { id: '1233', name: 'Chilai Home', productCount: 4 },
-    { id: '1688', name: 'Childgen', productCount: 7 },
-    { id: '1642', name: 'Circle Toys', productCount: 10 },
-    { id: '3022', name: 'Clementoni', productCount: 6 },
-    { id: '451', name: 'Dalin', productCount: 2 },
-    { id: '1373', name: 'Dede Oyuncak', productCount: 19 },
-    { id: '7544', name: 'Deerma', productCount: 2 },
-    { id: '1368', name: 'Dolu', productCount: 16 },
-    { id: '2015', name: 'Dolu Nuve', productCount: 1 },
-    { id: '6010', name: 'Doğan Çocuk', productCount: 73 },
-    { id: '1257', name: 'Durubox', productCount: 2 },
-    { id: '1067', name: 'Eday', productCount: 2 },
-    { id: '7719', name: 'Epsilon Yayınevi', productCount: 10 },
-    { id: '9956', name: 'Eyüp Sabri Tuncer', productCount: 4 },
-    { id: '270', name: 'Fisher-Price', productCount: 6 },
-    { id: '218', name: 'Fodi Safe', productCount: 1 },
-    { id: '453', name: 'Galt', productCount: 1 },
-    { id: '1694', name: 'Green Mood', productCount: 3 },
-    { id: '1223', name: 'Hametol', productCount: 1 },
-    { id: '1808', name: 'Hey Clay', productCount: 7 },
-    { id: '9937', name: 'Holle', productCount: 3 },
-    { id: '7670', name: 'Holmen', productCount: 7 },
-    { id: '4402', name: 'Homedius', productCount: 2 },
-    { id: '7693', name: 'Hops', productCount: 1 },
-    { id: '2517', name: 'Hot Wheels', productCount: 2 },
-    { id: '1741', name: 'IMEX', productCount: 1 },
-    { id: '1033', name: 'INCIA', productCount: 4 },
-    { id: '1063', name: 'Ideal Baby', productCount: 5 },
-    { id: '1578', name: 'İndigo Çocuk', productCount: 49 },
-    { id: '9939', name: 'İş Kültür Yayınları', productCount: 79 },
-    { id: '2509', name: 'Joie', productCount: 1 },
-    { id: '1626', name: 'Kayyum', productCount: 2 },
-    { id: '259', name: 'Kraft', productCount: 2 },
-    { id: '1377', name: 'LEGO', productCount: 3 },
-    { id: '1300', name: 'LULUBERE', productCount: 1 },
-    { id: '827', name: 'Let\'s Be Child', productCount: 6 },
-    { id: '1771', name: 'Ludita', productCount: 5 },
-    { id: '1528', name: 'Mamajoo', productCount: 1 },
-    { id: '1650', name: 'Mamma Baby Food', productCount: 10 },
-    { id: '1011', name: 'Masalperest', productCount: 27 },
-    { id: '9959', name: 'Materni', productCount: 3 },
-    { id: '1806', name: 'Meross', productCount: 1 },
-    { id: '1649', name: 'Milkin', productCount: 1 },
-    { id: '7738', name: 'Minera', productCount: 14 },
-    { id: '1231', name: 'Minikoioi', productCount: 1 },
-    { id: '3198', name: 'Miny Baby', productCount: 6 },
-    { id: '821', name: 'Mochi', productCount: 2 },
-    { id: '7623', name: 'Molie', productCount: 2 },
-    { id: '6291', name: 'Monamoms', productCount: 2 },
-    { id: '1493', name: 'Munchkin', productCount: 6 },
-    { id: '9949', name: 'Nemesis', productCount: 11 },
-    { id: '1329', name: 'Net Çocuk Yayınları', productCount: 2 },
-    { id: '6077', name: 'Nuf Kozmetik', productCount: 7 },
-    { id: '348', name: 'OKBaby', productCount: 9 },
-    { id: '1017', name: 'OTS Organik', productCount: 4 },
-    { id: '5978', name: 'OiOi', productCount: 20 },
-    { id: '1005', name: 'Orzax', productCount: 3 },
-    { id: '1240', name: 'Pandish', productCount: 6 },
-    { id: '1007', name: 'Peta Kitap', productCount: 22 },
-    { id: '204', name: 'Pilsan Oyuncak', productCount: 9 },
-    { id: '1724', name: 'Pol\'s', productCount: 11 },
-    { id: '4709', name: 'Pratico', productCount: 6 },
-    { id: '430', name: 'Prima', productCount: 5 },
-    { id: '1254', name: 'Pure Wipes', productCount: 1 },
-    { id: '7702', name: 'SafeMom', productCount: 4 },
-    { id: '4707', name: 'Setay Mobilya', productCount: 6 },
-    { id: '2006', name: 'Sincap Kitap', productCount: 1 },
-    { id: '1746', name: 'Sisbro', productCount: 1 },
-    { id: '831', name: 'Siveno', productCount: 2 },
-    { id: '4648', name: 'Sleepy', productCount: 21 },
-    { id: '1506', name: 'Smarteach', productCount: 31 },
-    { id: '2991', name: 'Solo', productCount: 1 },
-    { id: '1971', name: 'Sterilisa', productCount: 2 },
-    { id: '1380', name: 'Trunki', productCount: 3 },
-    { id: '680', name: 'Uni Baby', productCount: 6 },
-    { id: '1680', name: 'Uçan Fil Yayınevi', productCount: 3 },
-    { id: '1076', name: 'Valens', productCount: 1 },
-    { id: '1660', name: 'Vepa', productCount: 3 },
-    { id: '3021', name: 'Wee Baby', productCount: 6 },
-    { id: '1598', name: 'Wefood', productCount: 3 },
-    { id: '1171', name: 'Weleda', productCount: 13 },
-    { id: '1927', name: 'Whome', productCount: 1 },
-    { id: '7688', name: 'Xiaomi', productCount: 2 },
-    { id: '1928', name: 'Yapı Kredi Yayınları', productCount: 42 },
-    { id: '1749', name: 'Yeti Kitap', productCount: 9 },
-    { id: '1751', name: 'Yomio Drops', productCount: 4 },
-    { id: '1804', name: 'Yükselen Zeka', productCount: 18 },
-    { id: '4708', name: 'Zooturak', productCount: 6 },
-    { id: '1937', name: 'baby me', productCount: 1 },
-    { id: '3058', name: 'baby mom', productCount: 1 },
-    { id: '1994', name: 'baby plus', productCount: 2 },
-    { id: '3008', name: 'baby toys', productCount: 4 },
-    { id: '4403', name: 'brush-baby', productCount: 2 },
-    { id: '1514', name: 'ebebek', productCount: 1 },
-    { id: '1708', name: 'ebebek/Can Yayınları', productCount: 1 },
-    { id: '1981', name: 'fufizu', productCount: 3 },
-    { id: '1770', name: 'momwell', productCount: 7 },
-    { id: '1980', name: 'snugpuff', productCount: 3 },
-    { id: '1677', name: 'İlhan Sarı', productCount: 2 }
+    { id: 'chicco', name: 'Chicco', productCount: 45 },
+    { id: 'bebeto', name: 'Bebeto', productCount: 32 },
+    { id: 'mama-papa', name: 'Mama Papa', productCount: 28 },
+    { id: 'johnson', name: 'Johnson\'s', productCount: 23 },
+    { id: 'philips-avent', name: 'Philips Avent', productCount: 19 },
+    { id: 'tommee-tippee', name: 'Tommee Tippee', productCount: 15 },
+    { id: 'nuby', name: 'Nuby', productCount: 12 },
+    { id: 'mam', name: 'MAM', productCount: 11 }
   ];
 
-  sizes: FilterOption[] = [
+  // API'den gelecek veriler
+  availableSizes: FilterOption[] = [];
+  availableGenders: FilterOption[] = [];
+  availableColors: ColorOption[] = [];
+  availableRatings: FilterOption[] = [];
+
+  // Fallback veriler (API'den gelmezse)
+  defaultSizes: FilterOption[] = [
     { id: '0-3-ay', name: '0-3 Ay', count: 25 },
     { id: '3-6-ay', name: '3-6 Ay', count: 30 },
     { id: '6-12-ay', name: '6-12 Ay', count: 35 },
@@ -207,15 +66,15 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { id: '2-3-yas', name: '2-3 Yaş', count: 18 }
   ];
 
-  genders: FilterOption[] = [
+  defaultGenders: FilterOption[] = [
     { id: 'erkek', name: 'Erkek', count: 45 },
     { id: 'kız', name: 'Kız', count: 42 },
     { id: 'unisex', name: 'Unisex', count: 38 }
   ];
 
-  colors: ColorOption[] = [
-    { id: 'kirmizi', name: 'Kırmızı', hexCode: '#e74c3c' },
+  defaultColors: ColorOption[] = [
     { id: 'mavi', name: 'Mavi', hexCode: '#3498db' },
+    { id: 'kirmizi', name: 'Kırmızı', hexCode: '#e74c3c' },
     { id: 'yesil', name: 'Yeşil', hexCode: '#27ae60' },
     { id: 'sari', name: 'Sarı', hexCode: '#f1c40f' },
     { id: 'pembe', name: 'Pembe', hexCode: '#e91e63' },
@@ -225,13 +84,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { id: 'gri', name: 'Gri', hexCode: '#95a5a6' },
     { id: 'siyah', name: 'Siyah', hexCode: '#2c3e50' },
     { id: 'beyaz', name: 'Beyaz', hexCode: '#ecf0f1' },
-    { id: 'lacivert', name: 'Lacivert', hexCode: '#2c3e50' },
-    { id: 'bordo', name: 'Bordo', hexCode: '#8e44ad' },
-    { id: 'turkuaz', name: 'Turkuaz', hexCode: '#1abc9c' },
-    { id: 'krem', name: 'Krem', hexCode: '#f5f5dc' },
-    { id: 'gold', name: 'Gold', hexCode: '#ffd700' },
-    { id: 'gumush', name: 'Gümüş', hexCode: '#c0c0c0' },
-    { id: 'pastel-mavi', name: 'Pastel Mavi', hexCode: '#add8e6' }
+    { id: 'krem', name: 'Krem', hexCode: '#f5f5dc' }
   ];
 
   priceRanges = [
@@ -243,7 +96,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { min: 1000, max: 999999, label: '1000+ TL' }
   ];
 
-  ratingOptions = [
+  defaultRatingOptions = [
     { value: 4, count: 25 },
     { value: 3, count: 45 },
     { value: 2, count: 15 },
@@ -271,11 +124,140 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       this.currentFilters = filters;
       this.updateFormFromFilters(filters);
     });
+
+    // API'den filter seçeneklerini yükle
+    this.store.dispatch(ProductActions.loadFilterOptions());
+    
+    // Facets güncellemelerini dinle
+    this.store.select(ProductSelectors.selectFacets)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(facets => {
+        if (facets && facets.length > 0) {
+          this.updateFilterOptionsFromApi(facets);
+        }
+      });
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private loadFilterOptionsFromApi() {
+    // Bu method artık ngOnInit'de dispatch ediliyor
+    // Fallback olarak default değerleri yükle
+    this.availableSizes = this.defaultSizes;
+    this.availableGenders = this.defaultGenders;
+    this.availableColors = this.defaultColors;
+    this.availableRatings = this.defaultRatingOptions;
+  }
+
+  // API'den gelen facets verisini işleme methodu
+  updateFilterOptionsFromApi(facets: any[]) {
+    if (!facets) return;
+
+    // Size facet'i işle
+    const sizeFacet = facets.find(f => f.code === 'size');
+    if (sizeFacet?.values) {
+      this.availableSizes = sizeFacet.values.map((value: any) => ({
+        id: value.code,
+        name: value.name,
+        count: value.count
+      }));
+    }
+
+    // Gender facet'i işle
+    const genderFacet = facets.find(f => f.code === 'gender');
+    if (genderFacet?.values) {
+      this.availableGenders = genderFacet.values.map((value: any) => ({
+        id: this.mapGenderCode(value.code),
+        name: value.name,
+        count: value.count
+      }));
+    }
+
+    // Color facet'i işle
+    const colorFacet = facets.find(f => f.code === 'color');
+    if (colorFacet?.values) {
+      this.availableColors = colorFacet.values.map((value: any) => ({
+        id: this.mapColorCode(value.code),
+        name: value.name,
+        hexCode: this.rgbToHex(value.code) || this.getDefaultColorHex(value.name)
+      }));
+    }
+
+    // Rating facet'i işle
+    const ratingFacet = facets.find(f => f.code === 'review_rating_star');
+    if (ratingFacet?.values) {
+      this.availableRatings = ratingFacet.values
+        .filter((value: any) => !value.name.includes('Puansız'))
+        .map((value: any) => ({
+          value: this.extractRatingValue(value.name),
+          count: value.count
+        }))
+        .filter(item => item.value > 0);
+    }
+  }
+
+  private mapGenderCode(apiCode: string): string {
+    const genderMap: { [key: string]: string } = {
+      'Erkek Bebek': 'erkek',
+      'Kız Bebek': 'kız',
+      'Unisex': 'unisex',
+      'Kadın': 'unisex' // Anne ürünleri için
+    };
+    return genderMap[apiCode] || 'unisex';
+  }
+
+  private mapColorCode(rgbCode: string): string {
+    const rgbMap: { [key: string]: string } = {
+      '0;0;255': 'mavi',
+      '255;0;0': 'kirmizi',
+      '0;128;0': 'yesil',
+      '255;255;0': 'sari',
+      '255;0;255': 'pembe',
+      '128;0;128': 'mor',
+      '255;165;0': 'turuncu',
+      '165;42;42': 'kahverengi',
+      '128;128;128': 'gri',
+      '0;0;0': 'siyah',
+      '255;255;255': 'beyaz',
+      '194;178;128': 'krem'
+    };
+    return rgbMap[rgbCode] || rgbCode;
+  }
+
+  private rgbToHex(rgbCode: string): string | null {
+    if (!rgbCode.includes(';')) return null;
+    
+    const [r, g, b] = rgbCode.split(';').map(Number);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+    
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  }
+
+  private getDefaultColorHex(colorName: string): string {
+    const colorHexMap: { [key: string]: string } = {
+      'Mavi': '#3498db',
+      'Kırmızı': '#e74c3c',
+      'Yeşil': '#27ae60',
+      'Sarı': '#f1c40f',
+      'Pembe': '#e91e63',
+      'Mor': '#9b59b6',
+      'Turuncu': '#e67e22',
+      'Kahverengi': '#8d6e63',
+      'Gri': '#95a5a6',
+      'Siyah': '#2c3e50',
+      'Beyaz': '#ecf0f1',
+      'Krem': '#f5f5dc',
+      'Ekru': '#f5f5dc'
+    };
+    return colorHexMap[colorName] || '#cccccc';
+  }
+
+  private extractRatingValue(ratingName: string): number {
+    const match = ratingName.match(/(\d+)\*/);
+    return match ? parseInt(match[1]) : 0;
   }
 
   private updateFormFromFilters(filters: ProductFilters) {
@@ -290,6 +272,23 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       this.minPrice = null;
       this.maxPrice = null;
     }
+  }
+
+  // Getter methods for templates
+  get sizes(): FilterOption[] {
+    return this.availableSizes.length > 0 ? this.availableSizes : this.defaultSizes;
+  }
+
+  get genders(): FilterOption[] {
+    return this.availableGenders.length > 0 ? this.availableGenders : this.defaultGenders;
+  }
+
+  get colors(): ColorOption[] {
+    return this.availableColors.length > 0 ? this.availableColors : this.defaultColors;
+  }
+
+  get ratingOptions(): any[] {
+    return this.availableRatings.length > 0 ? this.availableRatings : this.defaultRatingOptions;
   }
 
   getFilteredBrands(): Brand[] {

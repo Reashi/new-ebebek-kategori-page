@@ -1,4 +1,5 @@
-// src/app/features/product-listing/product/product.actions.ts
+// src/app/features/product-listing/product/product.actions.ts - Updated with Facets Support
+
 import { createAction, props } from '@ngrx/store';
 import { Product, ProductFilters } from './product.model';
 
@@ -24,6 +25,7 @@ export const loadProductsSuccess = createAction(
     totalCount: number;
     currentPage: number;
     pageSize: number;
+    facets?: any[];
   }>()
 );
 
@@ -46,6 +48,7 @@ export const searchProductsSuccess = createAction(
     currentPage: number;
     pageSize: number;
     searchTerm: string;
+    facets?: any[];
   }>()
 );
 
@@ -119,7 +122,7 @@ export const previousPage = createAction(
   '[Product Pagination] Previous Page'
 );
 
-// Load Filter Options Actions
+// Filter Options Actions - Yeni eklenenler
 export const loadFilterOptions = createAction(
   '[Product Filter] Load Filter Options'
 );
@@ -134,6 +137,27 @@ export const loadFilterOptionsFailure = createAction(
   props<{ error: string }>()
 );
 
+// Facets Support Actions - Yeni eklenenler
+export const updateFilterOptions = createAction(
+  '[Product Filter] Update Filter Options from Facets',
+  props<{ 
+    facets: any[];
+    availableColors?: any[];
+    availableSizes?: any[];
+    availableGenders?: any[];
+  }>()
+);
+
+export const updateFilterOptionsSuccess = createAction(
+  '[Product Filter] Update Filter Options Success',
+  props<{ 
+    availableColors: any[];
+    availableSizes: any[];
+    availableGenders: any[];
+    availableRatings?: any[];
+  }>()
+);
+
 // Reset Actions
 export const resetProductState = createAction(
   '[Product] Reset State'
@@ -141,4 +165,33 @@ export const resetProductState = createAction(
 
 export const retryLastAction = createAction(
   '[Product] Retry Last Action'
+);
+
+// Utility Actions - Hata durumları için
+export const showFilterError = createAction(
+  '[Product Filter] Show Filter Error',
+  props<{ message: string }>()
+);
+
+export const clearFilterError = createAction(
+  '[Product Filter] Clear Filter Error'
+);
+
+// Performance tracking actions
+export const trackFilterUsage = createAction(
+  '[Product Analytics] Track Filter Usage',
+  props<{ 
+    filterType: string;
+    filterValue: any;
+    timestamp: number;
+  }>()
+);
+
+export const trackSearchQuery = createAction(
+  '[Product Analytics] Track Search Query',
+  props<{ 
+    searchTerm: string;
+    resultCount: number;
+    timestamp: number;
+  }>()
 );
