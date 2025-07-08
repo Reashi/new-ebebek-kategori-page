@@ -1,4 +1,4 @@
-// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts - Updated
+// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts - Fixed
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -7,7 +7,7 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { ProductFilters, Category, Brand, FilterOption, ColorOption } from '../../product/product.model';
+import { ProductFilters, Category, Brand, FilterOption, ColorOption, RatingOption } from '../../product/product.model';
 import * as ProductActions from '../../product/product.actions';
 import * as ProductSelectors from '../../product/product.selectors';
 
@@ -25,7 +25,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   filters$: Observable<ProductFilters>;
   hasActiveFilters$: Observable<boolean>;
 
-  // Filter data - Bunlar API'den gelecek
+  // Filter data - API'den gelecek
   categories: Category[] = [
     { id: 'strollers', name: 'Bebek Arabaları' },
     { id: 'food', name: 'Mama & Beslenme' },
@@ -54,9 +54,9 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   availableSizes: FilterOption[] = [];
   availableGenders: FilterOption[] = [];
   availableColors: ColorOption[] = [];
-  availableRatings: FilterOption[] = [];
+  availableRatings: RatingOption[] = [];
 
-  // Fallback veriler (API'den gelmezse)
+  // Fallback veriler
   defaultSizes: FilterOption[] = [
     { id: '0-3-ay', name: '0-3 Ay', count: 25 },
     { id: '3-6-ay', name: '3-6 Ay', count: 30 },
@@ -96,7 +96,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { min: 1000, max: 999999, label: '1000+ TL' }
   ];
 
-  defaultRatingOptions = [
+  defaultRatingOptions: RatingOption[] = [
     { value: 4, count: 25 },
     { value: 3, count: 45 },
     { value: 2, count: 15 },
@@ -134,6 +134,8 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       .subscribe(facets => {
         if (facets && facets.length > 0) {
           this.updateFilterOptionsFromApi(facets);
+        } else {
+          this.loadDefaultFilterOptions();
         }
       });
   }
@@ -143,16 +145,14 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadFilterOptionsFromApi() {
-    // Bu method artık ngOnInit'de dispatch ediliyor
-    // Fallback olarak default değerleri yükle
+  private loadDefaultFilterOptions() {
     this.availableSizes = this.defaultSizes;
     this.availableGenders = this.defaultGenders;
     this.availableColors = this.defaultColors;
     this.availableRatings = this.defaultRatingOptions;
   }
 
-  // API'den gelen facets verisini işleme methodu
+  // API facets verisini işleme methodu
   updateFilterOptionsFromApi(facets: any[]) {
     if (!facets) return;
 
@@ -195,8 +195,13 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
           value: this.extractRatingValue(value.name),
           count: value.count
         }))
-        .filter(item => item.value > 0);
+        .filter((item: any) => item.value > 0);
     }
+  }
+
+  // Public method for external updates
+  updateFacetsFromApiResponse(facets: any[]) {
+    this.updateFilterOptionsFromApi(facets);
   }
 
   private mapGenderCode(apiCode: string): string {
@@ -204,7 +209,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       'Erkek Bebek': 'erkek',
       'Kız Bebek': 'kız',
       'Unisex': 'unisex',
-      'Kadın': 'unisex' // Anne ürünleri için
+      'Kadın': 'unisex'
     };
     return genderMap[apiCode] || 'unisex';
   }
@@ -287,7 +292,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     return this.availableColors.length > 0 ? this.availableColors : this.defaultColors;
   }
 
-  get ratingOptions(): any[] {
+  get ratingOptions(): RatingOption[] {
     return this.availableRatings.length > 0 ? this.availableRatings : this.defaultRatingOptions;
   }
 

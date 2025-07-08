@@ -1,4 +1,4 @@
-// src/app/features/product-listing/product/product.reducer.ts - Updated with Facets Support
+// src/app/features/product-listing/product/product.reducer.ts - Fixed
 
 import { createReducer, on } from '@ngrx/store';
 import { ProductState } from './product.model';
@@ -185,12 +185,17 @@ export const productReducer = createReducer(
 
     if (Array.isArray(currentValues)) {
       const newValues = currentValues.filter((v: any) => v !== value);
+      const updatedFilters = { ...state.filters };
+      
+      if (newValues.length > 0) {
+        updatedFilters[filterType] = newValues as any;
+      } else {
+        delete updatedFilters[filterType];
+      }
+      
       return {
         ...state,
-        filters: {
-          ...state.filters,
-          [filterType]: newValues.length > 0 ? newValues : undefined
-        },
+        filters: updatedFilters,
         currentPage: 1,
         filterError: null
       };
@@ -318,24 +323,24 @@ export const productReducer = createReducer(
 
 // Selector yardımcı fonksiyonları
 export const getFilterErrorMessage = (state: ProductState): string | null => {
-  return state.filterError;
+  return state.filterError || null;
 };
 
 export const getAvailableFilterOptions = (state: ProductState) => ({
-  colors: state.availableColors,
-  sizes: state.availableSizes,
-  genders: state.availableGenders,
-  ratings: state.availableRatings,
-  categories: state.availableCategories,
-  brands: state.availableBrands
+  colors: state.availableColors || [],
+  sizes: state.availableSizes || [],
+  genders: state.availableGenders || [],
+  ratings: state.availableRatings || [],
+  categories: state.availableCategories || [],
+  brands: state.availableBrands || []
 });
 
 export const hasFilterData = (state: ProductState): boolean => {
   return !!(
-    state.availableColors?.length ||
-    state.availableSizes?.length ||
-    state.availableGenders?.length ||
-    state.availableRatings?.length ||
-    state.facets?.length
+    (state.availableColors && state.availableColors.length > 0) ||
+    (state.availableSizes && state.availableSizes.length > 0) ||
+    (state.availableGenders && state.availableGenders.length > 0) ||
+    (state.availableRatings && state.availableRatings.length > 0) ||
+    (state.facets && state.facets.length > 0)
   );
 };
