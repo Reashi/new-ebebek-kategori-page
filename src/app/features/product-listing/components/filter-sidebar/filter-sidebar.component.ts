@@ -153,8 +153,10 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   }
 
   // API'den gelen facets verisini işleme methodu
-  updateFilterOptionsFromApi(facets: any[]) {
+    updateFilterOptionsFromApi(facets: any[]) {
     if (!facets) return;
+
+    console.log('Facets received:', facets); // Debug için
 
     // Size facet'i işle
     const sizeFacet = facets.find(f => f.code === 'size');
@@ -199,14 +201,16 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
         .filter((item: FilterOption) => Number(item.id) > 0);
     }
 
-    // Brand facet'i işle
+    // Brand facet'i işle - Burada kodlar sayısal, isimler string
     const brandFacet = facets.find(f => f.code === 'brand');
     if (brandFacet?.values) {
+      console.log('Brand facet values:', brandFacet.values); // Debug için
       this.brands = brandFacet.values.map((value: any) => ({
-        id: value.code,
+        id: value.code.toString(), // Code'u string'e çevir
         name: value.name,
         productCount: value.count
       }));
+      console.log('Processed brands:', this.brands); // Debug için
     }
   }
 

@@ -406,16 +406,31 @@ export class MockDataService {
   
   getBrands(): Observable<any[]> {
     const brands = [
-      { code: 'chicco', name: 'Chicco', count: 3 },
-      { code: 'bebeto', name: 'Bebeto', count: 1 },
-      { code: 'johnson', name: 'Johnson\'s', count: 1 },
-      { code: 'philips-avent', name: 'Philips Avent', count: 1 },
-      { code: 'fisher-price', name: 'Fisher Price', count: 1 },
-      { code: 'pampers', name: 'Pampers', count: 1 },
-      { code: 'tommee-tippee', name: 'Tommee Tippee', count: 1 },
-      { code: 'nuby', name: 'Nuby', count: 1 },
-      { code: 'mam', name: 'MAM', count: 1 },
-      { code: 'baby-dove', name: 'Baby Dove', count: 1 }
+      { code: '1514', name: 'ebebek', count: 1 },
+      { code: '185', name: 'Chicco', count: 2 },
+      { code: '459', name: 'Babyjem', count: 27 },
+      { code: '680', name: 'Uni Baby', count: 6 },
+      { code: '4648', name: 'Sleepy', count: 21 },
+      { code: '1650', name: 'Mamma Baby Food', count: 10 },
+      { code: '1257', name: 'Durubox', count: 2 },
+      { code: '270', name: 'Fisher-Price', count: 6 },
+      { code: '430', name: 'Prima', count: 5 },
+      { code: '513', name: 'Canbebe', count: 6 },
+      { code: '798', name: 'BabyBjörn', count: 15 },
+      { code: '1536', name: 'Baby Turco', count: 4 },
+      { code: '348', name: 'OKBaby', count: 9 },
+      { code: '1368', name: 'Dolu', count: 16 },
+      { code: '1373', name: 'Dede Oyuncak', count: 19 },
+      { code: '204', name: 'Pilsan Oyuncak', count: 9 },
+      { code: '1998', name: 'Altın Kitaplar', count: 51 },
+      { code: '6010', name: 'Doğan Çocuk', count: 73 },
+      { code: '1578', name: 'İndigo Çocuk', count: 49 },
+      { code: '9939', name: 'İş Kültür Yayınları', count: 79 },
+      { code: '1928', name: 'Yapı Kredi Yayınları', count: 42 },
+      { code: '1011', name: 'Masalperest', count: 27 },
+      { code: '1007', name: 'Peta Kitap', count: 22 },
+      { code: '1506', name: 'Smarteach', count: 31 },
+      { code: '1804', name: 'Yükselen Zeka', count: 18 }
     ];
     
     return of(brands).pipe(delay(200));

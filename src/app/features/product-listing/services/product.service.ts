@@ -186,50 +186,56 @@ export class ProductService {
   }
 
   private buildQuery(filters?: ProductFilters, sortBy?: string): string {
-    // Başlangıçta sadece sıralama
-    let query = `:${this.mapSortBy(sortBy)}`;
-    const filterParts: string[] = [];
+    let queryParts: string[] = [];
+
+    // Sıralama
+    const sort = this.mapSortBy(sortBy);
+    queryParts.push(`:${sort}`);
 
     // Kategori filtresi
     if (filters?.categoryId) {
       const ebebekCategoryCode = this.categoryMapping[filters.categoryId];
       if (ebebekCategoryCode) {
-        filterParts.push(`allCategories:${ebebekCategoryCode}`);
+        queryParts.push(`allCategories:${ebebekCategoryCode}`);
       }
     }
 
-    // Marka filtresi
+    // Marka filtresi - Kodlar sayısal olduğu için direkt kullan
     if (filters?.brandIds && filters.brandIds.length > 0) {
-      filterParts.push(`brand:${filters.brandIds.join('|')}`);
+      const brandQueries = filters.brandIds.map(brandId => `brand:${brandId}`).join(' OR ');
+      queryParts.push(`(${brandQueries})`);
     }
 
     // Arama terimi
     if (filters?.searchTerm) {
-      filterParts.push(`text:${encodeURIComponent(filters.searchTerm)}`);
+      queryParts.push(`text:${encodeURIComponent(filters.searchTerm)}`);
     }
 
     // Fiyat aralığı
     if (filters?.priceRange) {
-      filterParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
+      queryParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
     }
 
-    // Cinsiyet filtresi
+    // Cinsiyet filtresi - API'nin gender facet'ini kullan
     if (filters?.genders && filters.genders.length > 0) {
       const genderMapping: { [key: string]: string } = {
         'erkek': 'Erkek Bebek',
         'kız': 'Kız Bebek',
         'unisex': 'Unisex'
       };
-      const genderCodes = filters.genders
+      
+      const genderQueries = filters.genders
         .map(gender => genderMapping[gender])
         .filter(Boolean)
-        .join('|');
-      if (genderCodes) {
-        filterParts.push(`gender:${genderCodes}`);
+        .map(apiGender => `gender:"${apiGender}"`)
+        .join(' OR ');
+      
+      if (genderQueries) {
+        queryParts.push(`(${genderQueries})`);
       }
     }
 
-    // Renk filtresi
+    // Renk filtresi - API'nin color facet'ini kullan
     if (filters?.colors && filters.colors.length > 0) {
       const colorMapping: { [key: string]: string } = {
         'mavi': '0;0;255',
@@ -245,44 +251,53 @@ export class ProductService {
         'beyaz': '255;255;255',
         'krem': '194;178;128'
       };
-      const colorCodes = filters.colors
+      
+      const colorQueries = filters.colors
         .map(color => colorMapping[color])
         .filter(Boolean)
-        .join('|');
-      if (colorCodes) {
-        filterParts.push(`color:${colorCodes}`);
+        .map(apiColor => `color:"${apiColor}"`)
+        .join(' OR ');
+      
+      if (colorQueries) {
+        queryParts.push(`(${colorQueries})`);
       }
     }
 
-    // Beden filtresi
+    // Beden filtresi - API'nin size facet'ini kullan
     if (filters?.sizes && filters.sizes.length > 0) {
-      filterParts.push(`size:${filters.sizes.join('|')}`);
+      const sizeQueries = filters.sizes
+        .map(size => `size:"${size}"`)
+        .join(' OR ');
+      
+      queryParts.push(`(${sizeQueries})`);
     }
 
     // Değerlendirme filtresi
     if (filters?.ratings && filters.ratings.length > 0) {
-      filterParts.push(`review_rating_star:${filters.ratings.join('|')}`);
+      const ratingQueries = filters.ratings
+        .map(rating => `review_rating_star:"${rating}* ve üzeri"`)
+        .join(' OR ');
+      
+      queryParts.push(`(${ratingQueries})`);
     }
 
     // Stok durumu
     if (filters?.inStockOnly) {
-      filterParts.push('stockLevelStatus:inStock');
+      queryParts.push('stockLevelStatus:inStock');
     }
 
     // İndirimli ürünler
     if (filters?.onSaleOnly) {
-      filterParts.push('discountRate:[1 TO *]');
+      queryParts.push('discountRate:[1 TO *]');
     }
 
-    if (filterParts.length > 0) {
-      query += ':(' + filterParts.join(',') + ')';
-    }
-
+    const finalQuery = queryParts.join(':');
+    
     if (environment.features.enableLogging) {
-      console.log('Built query:', query);
+      console.log('Built query:', finalQuery);
     }
 
-    return query;
+    return finalQuery;
   }
 
   private mapSortBy(sortBy?: string): string {
