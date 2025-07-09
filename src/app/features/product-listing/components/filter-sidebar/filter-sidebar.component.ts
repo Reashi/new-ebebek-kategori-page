@@ -198,6 +198,16 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
         }))
         .filter((item: FilterOption) => Number(item.id) > 0);
     }
+
+    // Brand facet'i işle
+    const brandFacet = facets.find(f => f.code === 'brand');
+    if (brandFacet?.values) {
+      this.brands = brandFacet.values.map((value: any) => ({
+        id: value.code,
+        name: value.name,
+        productCount: value.count
+      }));
+    }
   }
 
   private mapGenderCode(apiCode: string): string {
