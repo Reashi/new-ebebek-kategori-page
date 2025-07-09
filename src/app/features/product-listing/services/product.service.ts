@@ -1,4 +1,4 @@
-// src/app/features/product-listing/services/product.service.ts - Enhanced Query Building
+// src/app/features/product-listing/services/product.service.ts - Fixed Version
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
@@ -162,7 +162,7 @@ export class ProductService {
     const query = this.buildQuery(params.filters, params.sortBy);
     httpParams = httpParams.set('query', query);
 
-    if (environment.features.enableLogging) {
+    if (environment.features?.enableLogging) {
       console.log('Built HTTP params:', httpParams.toString());
     }
 
@@ -177,7 +177,7 @@ export class ProductService {
       ',potentialPromotions(FULL),discountRate,brandName,hasOwnPackage',
       ',internetProduct,configuratorType,price(FULL),images(DEFAULT)',
       ',stock(FULL),numberOfReviews,averageRating,baseOptions(FULL)',
-      ',variantOptions(FULL),url,categories(FULL),baseProduct', // variantOptions dahil edildi
+      ',variantOptions(FULL),url,categories(FULL),baseProduct',
       ',isVideoActive,isArActive,vendor',
       ')',
       ',facets(FULL),breadcrumbs,pagination(DEFAULT),sorts(DEFAULT)',
@@ -293,7 +293,7 @@ export class ProductService {
 
     const finalQuery = queryParts.join(':');
     
-    if (environment.features.enableLogging) {
+    if (environment.features?.enableLogging) {
       console.log('Built query:', finalQuery);
     }
 
@@ -379,7 +379,10 @@ export class ProductService {
     if (!facets) return [];
     
     const sizeFacet = facets.find(f => f.code === 'size');
+
     if (!sizeFacet || !sizeFacet.values) return [];
+
+
 
     return sizeFacet.values.map(value => ({
       id: value.code,
@@ -451,7 +454,7 @@ export class ProductService {
   }
 
   private logError(method: string, error: any, params?: any): void {
-    if (environment.features.enableLogging) {
+    if (environment.features?.enableLogging) {
       console.error(`ProductService.${method} error:`, {
         error,
         params,
@@ -460,7 +463,7 @@ export class ProductService {
     }
   }
 
-  // Diğer metodlar aynı kalıyor...
+  // Diğer metodlar
   getProductById(id: string): Observable<Product> {
     const url = `${this.baseUrl}/products/${id}`;
     const headers = this.getHeaders();
@@ -517,7 +520,7 @@ export class ProductService {
   }
 }
 
-// Güncellenmiş EbebekProductMapper
+// EbebekProductMapper class
 export class EbebekProductMapper {
   static mapToProduct(ebebekProduct: EbebekProduct, facets?: EbebekFacet[]): Product {
     return {
@@ -561,8 +564,8 @@ export class EbebekProductMapper {
       .replace(/^-|-$/g, '');
   }
 
-  // Variantlardan renk çıkarma (orijinal method)
-  private static extractColors(variantOptions: any[]): string[] | null {
+  // Variantlardan renk çıkarma
+  private static extractColors(variantOptions?: any[]): string[] | null {
     if (!variantOptions) return null;
     
     const colorOption = variantOptions.find(option => 
@@ -570,8 +573,10 @@ export class EbebekProductMapper {
       option.code.toLowerCase().includes('renk')
     );
     
+
     if (colorOption?.variantOptionQualifiers) {
       return colorOption.variantOptionQualifiers.map((qualifier: { value: string }) => 
+
         this.mapColorName(qualifier.value)
       );
     }
@@ -579,8 +584,8 @@ export class EbebekProductMapper {
     return null;
   }
 
-  // Variantlardan beden çıkarma (orijinal method)
-  private static extractSizes(variantOptions: any[]): string[] | null {
+  // Variantlardan beden çıkarma
+  private static extractSizes(variantOptions?: any[]): string[] | null {
     if (!variantOptions) return null;
     
     const sizeOption = variantOptions.find(option => 
@@ -590,15 +595,16 @@ export class EbebekProductMapper {
       option.code.toLowerCase().includes('ay')
     );
     
+
     if (sizeOption?.variantOptionQualifiers) {
       return sizeOption.variantOptionQualifiers.map((qualifier: { value: string }) => qualifier.value);
-    }
+
     
     return null;
   }
 
-  // Kategorilerden cinsiyet çıkarma (orijinal method)
-  private static extractGender(categories: any[]): 'erkek' | 'kız' | 'unisex' | null {
+  // Kategorilerden cinsiyet çıkarma
+  private static extractGender(categories?: any[]): 'erkek' | 'kız' | 'unisex' | null {
     if (!categories) return null;
     
     const categoryNames = categories.map(cat => cat.name.toLowerCase()).join(' ');
@@ -613,7 +619,7 @@ export class EbebekProductMapper {
   }
 
   // Kategori isimlerinden cinsiyet çıkarma (fallback)
-  private static extractGenderFromCategories(categoryNames: string[]): 'erkek' | 'kız' | 'unisex' {
+  private static extractGenderFromCategories(categoryNames?: string[]): 'erkek' | 'kız' | 'unisex' {
     if (!categoryNames) return 'unisex';
     
     const categories = categoryNames.join(' ').toLowerCase();
