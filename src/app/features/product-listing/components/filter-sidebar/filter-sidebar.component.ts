@@ -96,11 +96,11 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { min: 1000, max: 999999, label: '1000+ TL' }
   ];
 
-  defaultRatingOptions = [
-    { value: 4, count: 25 },
-    { value: 3, count: 45 },
-    { value: 2, count: 15 },
-    { value: 1, count: 8 }
+  defaultRatingOptions: FilterOption[] = [
+    { id: '4', name: '4 yıldız ve üzeri', count: 25 },
+    { id: '3', name: '3 yıldız ve üzeri', count: 45 },
+    { id: '2', name: '2 yıldız ve üzeri', count: 15 },
+    { id: '1', name: '1 yıldız ve üzeri', count: 8 }
   ];
 
   // Form data
@@ -149,7 +149,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     this.availableSizes = this.defaultSizes;
     this.availableGenders = this.defaultGenders;
     this.availableColors = this.defaultColors;
-    this.availableRatings = this.defaultRatingOptions;
+    this.availableRatings = [...this.defaultRatingOptions];
   }
 
   // API'den gelen facets verisini işleme methodu
@@ -192,10 +192,11 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       this.availableRatings = ratingFacet.values
         .filter((value: any) => !value.name.includes('Puansız'))
         .map((value: any) => ({
-          value: this.extractRatingValue(value.name),
+          id: value.code || value.name,
+          name: value.name,
           count: value.count
         }))
-        .filter(item => item.value > 0);
+        .filter((item: FilterOption) => Number(item.id) > 0);
     }
   }
 

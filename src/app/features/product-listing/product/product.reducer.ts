@@ -318,7 +318,7 @@ export const productReducer = createReducer(
 
 // Selector yardımcı fonksiyonları
 export const getFilterErrorMessage = (state: ProductState): string | null => {
-  return state.filterError;
+  return (state.filterError === undefined ? null : state.filterError) as string | null;
 };
 
 export const getAvailableFilterOptions = (state: ProductState) => ({

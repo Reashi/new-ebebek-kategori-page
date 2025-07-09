@@ -67,6 +67,7 @@ export interface EbebekApiResponse {
   };
 }
 
+// Interface tanımlamaları
 export interface ProductQueryParams {
   filters?: ProductFilters;
   page?: number;
@@ -380,79 +381,6 @@ export class ProductService {
     const sizeFacet = facets.find(f => f.code === 'size');
     if (!sizeFacet || !sizeFacet.values) return [];
 
-    return sizeFacet.values.slice(0, 3).map(sizeValue => sizeValue.name);
-  }
-
-  // RGB kodundan renk adına çevirme
-  private static mapRgbToColorName(rgbCode: string, apiName: string): string {
-    // Önce API'den gelen adı kullan
-    if (apiName && apiName !== rgbCode) {
-      return this.mapColorName(apiName);
-    }
-
-    // RGB kod varsa çevir
-    const rgbMap: { [key: string]: string } = {
-      '0;0;255': 'mavi',
-      '255;0;0': 'kirmizi',
-      '0;128;0': 'yesil',
-      '255;255;0': 'sari',
-      '255;0;255': 'pembe',
-      '128;0;128': 'mor',
-      '255;165;0': 'turuncu',
-      '165;42;42': 'kahverengi',
-      '128;128;128': 'gri',
-      '0;0;0': 'siyah',
-      '255;255;255': 'beyaz',
-      '194;178;128': 'krem'
-    };
-
-    return rgbMap[rgbCode] || rgbCode;
-  }
-
-  private static mapColorName(colorValue: string): string {
-    const colorMap: { [key: string]: string } = {
-      'Mavi': 'mavi',
-      'Kırmızı': 'kirmizi',
-      'Yeşil': 'yesil',
-      'Sarı': 'sari',
-      'Pembe': 'pembe',
-      'Mor': 'mor',
-      'Turuncu': 'turuncu',
-      'Kahverengi': 'kahverengi',
-      'Gri': 'gri',
-      'Siyah': 'siyah',
-      'Beyaz': 'beyaz',
-      'Lacivert': 'lacivert',
-      'Turkuaz': 'turkuaz',
-      'Krem': 'krem',
-      'Ekru': 'krem',
-      'Karışık Renkli': 'karisik'
-    };
-    
-    return colorMap[colorValue] || colorValue.toLowerCase();
-  }
-}
-
-// Interface'leri güncelleyelim
-export interface ProductQueryParams {
-  filters?: ProductFilters;
-  page?: number;
-  pageSize?: number;
-  sortBy?: string;
-}
-
-export interface ProductResponse {
-  products: Product[];
-  totalCount: number;
-  currentPage: number;
-  pageSize: number;
-  facets?: any[];
-  breadcrumbs?: any[];
-  availableColors?: any[];
-  availableSizes?: any[];
-  availableGenders?: any[];
-}?.values) return [];
-
     return sizeFacet.values.map(value => ({
       id: value.code,
       name: value.name,
@@ -601,19 +529,18 @@ export class EbebekProductMapper {
         ? ebebekProduct.price.value 
         : undefined,
       description: ebebekProduct.summary || ebebekProduct.description || '',
-      imageUrl: this.getMainImageUrl(ebebekProduct.images),
-      categoryId: ebebekProduct.categoryCodes[0] || '',
+      imageUrl: this.getMainImageUrl(ebebekProduct.images || []),
+      categoryId: ebebekProduct.categoryCodes?.[0] || '',
       brandId: this.createBrandId(ebebekProduct.brandName),
       inStock: ebebekProduct.stock.stockLevelStatus === 'inStock',
       rating: ebebekProduct.averageRating,
       reviewCount: ebebekProduct.numberOfReviews,
-      // Önce variantOptions'dan, sonra facets'den çek
-      colors: this.extractColors(ebebekProduct.variantOptions) || 
+      colors: this.extractColors(ebebekProduct.variantOptions || []) || 
               this.extractColorsFromFacets(facets),
-      sizes: this.extractSizes(ebebekProduct.variantOptions) || 
+      sizes: this.extractSizes(ebebekProduct.variantOptions || []) || 
              this.extractSizesFromFacets(facets),
-      gender: this.extractGender(ebebekProduct.categories) || 
-              this.extractGenderFromCategories(ebebekProduct.categoryNames),
+      gender: this.extractGender(ebebekProduct.categories || []) || 
+              this.extractGenderFromCategories(ebebekProduct.categoryNames || []),
       isOnSale: ebebekProduct.discountRate > 0,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -643,8 +570,8 @@ export class EbebekProductMapper {
       option.code.toLowerCase().includes('renk')
     );
     
-    if (colorOption && colorOption.variantOptionQualifiers) {
-      return colorOption.variantOptionQualifiers.map(qualifier => 
+    if (colorOption?.variantOptionQualifiers) {
+      return colorOption.variantOptionQualifiers.map((qualifier: { value: string }) => 
         this.mapColorName(qualifier.value)
       );
     }
@@ -663,8 +590,8 @@ export class EbebekProductMapper {
       option.code.toLowerCase().includes('ay')
     );
     
-    if (sizeOption && sizeOption.variantOptionQualifiers) {
-      return sizeOption.variantOptionQualifiers.map(qualifier => qualifier.value);
+    if (sizeOption?.variantOptionQualifiers) {
+      return sizeOption.variantOptionQualifiers.map((qualifier: { value: string }) => qualifier.value);
     }
     
     return null;
@@ -771,13 +698,3 @@ export class EbebekProductMapper {
     return colorMap[colorValue] || colorValue.toLowerCase();
   }
 }
-
-  // Facets'den beden çıkarma (fallback)
-  private static extractSizesFromFacets(facets?: EbebekFacet[]): string[] {
-    if (!facets) return [];
-    
-    const sizeFacet = facets.find(facet => facet.code === 'size');
-    if (!sizeFacet || !sizeFacet.values) return [];
-
-    return sizeFacet.values.slice(0, 3).map(sizeValue => sizeValue.name);
-  }

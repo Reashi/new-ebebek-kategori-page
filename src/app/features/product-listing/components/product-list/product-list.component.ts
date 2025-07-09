@@ -250,7 +250,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
   // API response'undan gelen facet verilerini filter sidebar'a ilet
   updateFiltersWithFacetData(facets: any[]) {
     if (this.filterSidebar) {
-      this.filterSidebar.updateFacetsFromApiResponse(facets);
+      this.filterSidebar.updateFilterOptionsFromApi(facets);
     }
   }
 }
