@@ -186,56 +186,50 @@ export class ProductService {
   }
 
   private buildQuery(filters?: ProductFilters, sortBy?: string): string {
-    let queryParts: string[] = [];
-
-    // Sıralama
-    const sort = this.mapSortBy(sortBy);
-    queryParts.push(`:${sort}`);
+    // Başlangıçta sadece sıralama
+    let query = `:${this.mapSortBy(sortBy)}`;
+    const filterParts: string[] = [];
 
     // Kategori filtresi
     if (filters?.categoryId) {
       const ebebekCategoryCode = this.categoryMapping[filters.categoryId];
       if (ebebekCategoryCode) {
-        queryParts.push(`allCategories:${ebebekCategoryCode}`);
+        filterParts.push(`allCategories:${ebebekCategoryCode}`);
       }
     }
 
     // Marka filtresi
     if (filters?.brandIds && filters.brandIds.length > 0) {
-      const brandQuery = filters.brandIds.map(brandId => `brand:${brandId}`).join(' OR ');
-      queryParts.push(`(${brandQuery})`);
+      filterParts.push(`brand:${filters.brandIds.join('|')}`);
     }
 
     // Arama terimi
     if (filters?.searchTerm) {
-      queryParts.push(`text:${encodeURIComponent(filters.searchTerm)}`);
+      filterParts.push(`text:${encodeURIComponent(filters.searchTerm)}`);
     }
 
     // Fiyat aralığı
     if (filters?.priceRange) {
-      queryParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
+      filterParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
     }
 
-    // Cinsiyet filtresi - API'nin gender facet'ini kullan
+    // Cinsiyet filtresi
     if (filters?.genders && filters.genders.length > 0) {
       const genderMapping: { [key: string]: string } = {
         'erkek': 'Erkek Bebek',
         'kız': 'Kız Bebek',
         'unisex': 'Unisex'
       };
-      
-      const genderQueries = filters.genders
+      const genderCodes = filters.genders
         .map(gender => genderMapping[gender])
         .filter(Boolean)
-        .map(apiGender => `gender:"${apiGender}"`)
-        .join(' OR ');
-      
-      if (genderQueries) {
-        queryParts.push(`(${genderQueries})`);
+        .join('|');
+      if (genderCodes) {
+        filterParts.push(`gender:${genderCodes}`);
       }
     }
 
-    // Renk filtresi - API'nin color facet'ini kullan
+    // Renk filtresi
     if (filters?.colors && filters.colors.length > 0) {
       const colorMapping: { [key: string]: string } = {
         'mavi': '0;0;255',
@@ -251,53 +245,44 @@ export class ProductService {
         'beyaz': '255;255;255',
         'krem': '194;178;128'
       };
-      
-      const colorQueries = filters.colors
+      const colorCodes = filters.colors
         .map(color => colorMapping[color])
         .filter(Boolean)
-        .map(apiColor => `color:"${apiColor}"`)
-        .join(' OR ');
-      
-      if (colorQueries) {
-        queryParts.push(`(${colorQueries})`);
+        .join('|');
+      if (colorCodes) {
+        filterParts.push(`color:${colorCodes}`);
       }
     }
 
-    // Beden filtresi - API'nin size facet'ini kullan
+    // Beden filtresi
     if (filters?.sizes && filters.sizes.length > 0) {
-      const sizeQueries = filters.sizes
-        .map(size => `size:"${size}"`)
-        .join(' OR ');
-      
-      queryParts.push(`(${sizeQueries})`);
+      filterParts.push(`size:${filters.sizes.join('|')}`);
     }
 
     // Değerlendirme filtresi
     if (filters?.ratings && filters.ratings.length > 0) {
-      const ratingQueries = filters.ratings
-        .map(rating => `review_rating_star:"${rating}* ve üzeri"`)
-        .join(' OR ');
-      
-      queryParts.push(`(${ratingQueries})`);
+      filterParts.push(`review_rating_star:${filters.ratings.join('|')}`);
     }
 
     // Stok durumu
     if (filters?.inStockOnly) {
-      queryParts.push('stockLevelStatus:inStock');
+      filterParts.push('stockLevelStatus:inStock');
     }
 
     // İndirimli ürünler
     if (filters?.onSaleOnly) {
-      queryParts.push('discountRate:[1 TO *]');
+      filterParts.push('discountRate:[1 TO *]');
     }
 
-    const finalQuery = queryParts.join(':');
-    
+    if (filterParts.length > 0) {
+      query += ':(' + filterParts.join(',') + ')';
+    }
+
     if (environment.features.enableLogging) {
-      console.log('Built query:', finalQuery);
+      console.log('Built query:', query);
     }
 
-    return finalQuery;
+    return query;
   }
 
   private mapSortBy(sortBy?: string): string {
