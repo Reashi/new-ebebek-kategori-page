@@ -16,7 +16,7 @@ export class ProductEffects {
   private productService = inject(ProductService);
   private store = inject(Store);
 
-  // İlk sayfa yüklendiğinde ürünleri yükle
+  // İlk sayfa yüklendiğinde ürünleri yükle (sadece ilk yükleme için, filtre değişiminde tetiklenmez)
   loadProducts$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ProductActions.loadProducts),
@@ -36,7 +36,8 @@ export class ProductEffects {
         )
       )
     )
-  );
+  , { dispatch: true })
+  // NOT: Bu effect sadece [Product] Load Products action'ı ile tetiklenir. Filtre değişimlerinde setFilters, clearFilters, addFilter, removeFilter action'ları ile çalışan ayrı bir effect zaten mevcut (filterChange$).
 
   // Parametrelerle ürün yükleme - Geliştirilmiş versiyon
   loadProductsWithParams$ = createEffect(() =>

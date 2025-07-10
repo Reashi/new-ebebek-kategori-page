@@ -133,7 +133,11 @@ export class ProductService {
     return this.http.get<EbebekApiResponse>(url, { params: httpParams, headers })
       .pipe(
         timeout(this.requestTimeout),
-        map((response: EbebekApiResponse) => this.mapApiResponse(response, params)),
+        map((response: EbebekApiResponse) => {
+          // API'den dönen response'u logla
+          console.log('[API RESPONSE] /products/search', response);
+          return this.mapApiResponse(response, params);
+        }),
         catchError((error: any) => {
           this.logError('getProducts', error, params);
           return throwError(() => new Error(this.getErrorMessage(error)));
