@@ -1,4 +1,4 @@
-// src/app/features/product-listing/services/product.service.ts - Enhanced Query Building
+// src/app/features/product-listing/services/product.service.ts - Fixed Filter Data Flow
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
@@ -126,15 +126,20 @@ export class ProductService {
   }
 
   getProducts(params: ProductQueryParams = {}): Observable<ProductResponse> {
+    // Debug: Log received parameters
+    console.log('getProducts received:', params);
+    console.log('getProducts filters:', params.filters);
+    
     const url = `${this.baseUrl}/products/search`;
     const httpParams = this.buildHttpParams(params);
     const headers = this.getHeaders();
+
+    console.log('Final HTTP params:', httpParams.toString());
 
     return this.http.get<EbebekApiResponse>(url, { params: httpParams, headers })
       .pipe(
         timeout(this.requestTimeout),
         map((response: EbebekApiResponse) => {
-          // API'den dönen response'u logla
           console.log('[API RESPONSE] /products/search', response);
           return this.mapApiResponse(response, params);
         }),
@@ -146,6 +151,8 @@ export class ProductService {
   }
 
   private buildHttpParams(params: ProductQueryParams): HttpParams {
+    console.log('buildHttpParams called with:', params);
+    
     let httpParams = new HttpParams();
 
     // Sayfalama
@@ -158,70 +165,81 @@ export class ProductService {
     httpParams = httpParams.set('lang', 'tr');
     httpParams = httpParams.set('curr', 'TRY');
 
-    // Geliştirilmiş alan seçimi - variant bilgilerini de dahil et
+    // Geliştirilmiş alan seçimi
     const fields = this.getEnhancedFieldsParameter();
     httpParams = httpParams.set('fields', fields);
 
-    // Query oluşturma
+    // Query oluşturma - BURADA SORUN VAR!
     const query = this.buildQuery(params.filters, params.sortBy);
     httpParams = httpParams.set('query', query);
 
-    if (environment.features.enableLogging) {
-      console.log('Built HTTP params:', httpParams.toString());
-    }
-
+    console.log('Built HTTP params:', httpParams.toString());
     return httpParams;
   }
 
-  private getEnhancedFieldsParameter(): string {
-    return [
-      'products(',
-      'code,name,categoryCodes,bestSellerProduct,starProduct,minOrderQuantity',
-      ',newProduct,freeShipment,categoryNames,summary,description,discountedPrice(FULL)',
-      ',potentialPromotions(FULL),discountRate,brandName,hasOwnPackage',
-      ',internetProduct,configuratorType,price(FULL),images(DEFAULT)',
-      ',stock(FULL),numberOfReviews,averageRating,baseOptions(FULL)',
-      ',variantOptions(FULL),url,categories(FULL),baseProduct', // variantOptions dahil edildi
-      ',isVideoActive,isArActive,vendor',
-      ')',
-      ',facets(FULL),breadcrumbs,pagination(DEFAULT),sorts(DEFAULT)',
-      ',freeTextSearch,currentQuery,keywordRedirectUrl'
-    ].join('');
-  }
-
   private buildQuery(filters?: ProductFilters, sortBy?: string): string {
+    // Debug: Log filter building process
+    console.log('Building query with filters:', filters);
+    console.log('Filter type:', typeof filters);
+    console.log('Filter keys:', filters ? Object.keys(filters) : 'no filters');
+    
     let queryParts: string[] = [];
 
     // Sıralama
     const sort = this.mapSortBy(sortBy);
     queryParts.push(`:${sort}`);
 
+    // Eğer filters undefined, null veya empty object ise
+    if (!filters || Object.keys(filters).length === 0) {
+      console.log('No filters provided, returning basic query');
+      const basicQuery = queryParts.join(':');
+      console.log('Basic query:', basicQuery);
+      return basicQuery;
+    }
+
     // Kategori filtresi
-    if (filters?.categoryId) {
+    if (filters.categoryId) {
+      console.log('Adding category filter:', filters.categoryId);
       const ebebekCategoryCode = this.categoryMapping[filters.categoryId];
       if (ebebekCategoryCode) {
         queryParts.push(`allCategories:${ebebekCategoryCode}`);
       }
     }
 
-    // Marka filtresi - Kodlar sayısal olduğu için direkt kullan
-    if (filters?.brandIds && filters.brandIds.length > 0) {
-      const brandQueries = filters.brandIds.map(brandId => `brand:${brandId}`).join(' OR ');
-      queryParts.push(`(${brandQueries})`);
+    // Marka filtresi - DÜZELTİLDİ
+    if (filters.brandIds && Array.isArray(filters.brandIds) && filters.brandIds.length > 0) {
+      console.log('Adding brand filter:', filters.brandIds);
+      
+      // Tek marka için
+      if (filters.brandIds.length === 1) {
+        queryParts.push(`brand:${filters.brandIds[0]}`);
+      } else {
+        // Birden fazla marka için OR operatörü kullan
+        const brandQueries = filters.brandIds
+          .filter(brandId => brandId && brandId.trim()) // Boş değerleri filtrele
+          .map(brandId => `brand:${brandId.trim()}`);
+        
+        if (brandQueries.length > 0) {
+          queryParts.push(`(${brandQueries.join(' OR ')})`);
+        }
+      }
     }
 
     // Arama terimi
-    if (filters?.searchTerm) {
-      queryParts.push(`text:${encodeURIComponent(filters.searchTerm)}`);
+    if (filters.searchTerm && filters.searchTerm.trim()) {
+      console.log('Adding search term:', filters.searchTerm);
+      queryParts.push(`text:${encodeURIComponent(filters.searchTerm.trim())}`);
     }
 
     // Fiyat aralığı
-    if (filters?.priceRange) {
+    if (filters.priceRange && filters.priceRange.min !== undefined && filters.priceRange.max !== undefined) {
+      console.log('Adding price range:', filters.priceRange);
       queryParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
     }
 
-    // Cinsiyet filtresi - API'nin gender facet'ini kullan
-    if (filters?.genders && filters.genders.length > 0) {
+    // Cinsiyet filtresi
+    if (filters.genders && Array.isArray(filters.genders) && filters.genders.length > 0) {
+      console.log('Adding gender filter:', filters.genders);
       const genderMapping: { [key: string]: string } = {
         'erkek': 'Erkek Bebek',
         'kız': 'Kız Bebek',
@@ -231,16 +249,16 @@ export class ProductService {
       const genderQueries = filters.genders
         .map(gender => genderMapping[gender])
         .filter(Boolean)
-        .map(apiGender => `gender:"${apiGender}"`)
-        .join(' OR ');
+        .map(apiGender => `gender:"${apiGender}"`);
       
-      if (genderQueries) {
-        queryParts.push(`(${genderQueries})`);
+      if (genderQueries.length > 0) {
+        queryParts.push(`(${genderQueries.join(' OR ')})`);
       }
     }
 
-    // Renk filtresi - API'nin color facet'ini kullan
-    if (filters?.colors && filters.colors.length > 0) {
+    // Renk filtresi
+    if (filters.colors && Array.isArray(filters.colors) && filters.colors.length > 0) {
+      console.log('Adding color filter:', filters.colors);
       const colorMapping: { [key: string]: string } = {
         'mavi': '0;0;255',
         'kirmizi': '255;0;0',
@@ -259,47 +277,51 @@ export class ProductService {
       const colorQueries = filters.colors
         .map(color => colorMapping[color])
         .filter(Boolean)
-        .map(apiColor => `color:"${apiColor}"`)
-        .join(' OR ');
+        .map(apiColor => `color:"${apiColor}"`);
       
-      if (colorQueries) {
-        queryParts.push(`(${colorQueries})`);
+      if (colorQueries.length > 0) {
+        queryParts.push(`(${colorQueries.join(' OR ')})`);
       }
     }
 
-    // Beden filtresi - API'nin size facet'ini kullan
-    if (filters?.sizes && filters.sizes.length > 0) {
+    // Beden filtresi
+    if (filters.sizes && Array.isArray(filters.sizes) && filters.sizes.length > 0) {
+      console.log('Adding size filter:', filters.sizes);
       const sizeQueries = filters.sizes
-        .map(size => `size:"${size}"`)
-        .join(' OR ');
+        .filter(size => size && size.trim())
+        .map(size => `size:"${size.trim()}"`);
       
-      queryParts.push(`(${sizeQueries})`);
+      if (sizeQueries.length > 0) {
+        queryParts.push(`(${sizeQueries.join(' OR ')})`);
+      }
     }
 
     // Değerlendirme filtresi
-    if (filters?.ratings && filters.ratings.length > 0) {
+    if (filters.ratings && Array.isArray(filters.ratings) && filters.ratings.length > 0) {
+      console.log('Adding rating filter:', filters.ratings);
       const ratingQueries = filters.ratings
-        .map(rating => `review_rating_star:"${rating}* ve üzeri"`)
-        .join(' OR ');
+        .map(rating => `review_rating_star:"${rating}* ve üzeri"`);
       
-      queryParts.push(`(${ratingQueries})`);
+      if (ratingQueries.length > 0) {
+        queryParts.push(`(${ratingQueries.join(' OR ')})`);
+      }
     }
 
     // Stok durumu
-    if (filters?.inStockOnly) {
+    if (filters.inStockOnly === true) {
+      console.log('Adding stock filter: inStock only');
       queryParts.push('stockLevelStatus:inStock');
     }
 
     // İndirimli ürünler
-    if (filters?.onSaleOnly) {
+    if (filters.onSaleOnly === true) {
+      console.log('Adding sale filter: on sale only');
       queryParts.push('discountRate:[1 TO *]');
     }
 
     const finalQuery = queryParts.join(':');
-    
-    if (environment.features.enableLogging) {
-      console.log('Built query:', finalQuery);
-    }
+    console.log('Final built query:', finalQuery);
+    console.log('Query parts:', queryParts);
 
     return finalQuery;
   }
@@ -315,6 +337,22 @@ export class ProductService {
     };
 
     return sortMap[sortBy || 'relevance'] || 'relevance';
+  }
+
+  private getEnhancedFieldsParameter(): string {
+    return [
+      'products(',
+      'code,name,categoryCodes,bestSellerProduct,starProduct,minOrderQuantity',
+      ',newProduct,freeShipment,categoryNames,summary,description,discountedPrice(FULL)',
+      ',potentialPromotions(FULL),discountRate,brandName,hasOwnPackage',
+      ',internetProduct,configuratorType,price(FULL),images(DEFAULT)',
+      ',stock(FULL),numberOfReviews,averageRating,baseOptions(FULL)',
+      ',variantOptions(FULL),url,categories(FULL),baseProduct',
+      ',isVideoActive,isArActive,vendor',
+      ')',
+      ',facets(FULL),breadcrumbs,pagination(DEFAULT),sorts(DEFAULT)',
+      ',freeTextSearch,currentQuery,keywordRedirectUrl'
+    ].join('');
   }
 
   private getHeaders(): HttpHeaders {
@@ -335,7 +373,6 @@ export class ProductService {
       throw new Error('Invalid API response');
     }
 
-    // Facets'i products mapping'e geçir
     const products = (response.products || []).map(ebebekProduct => 
       EbebekProductMapper.mapToProduct(ebebekProduct, response.facets)
     );
@@ -347,20 +384,17 @@ export class ProductService {
       pageSize: response.pagination?.pageSize || 12,
       facets: response.facets,
       breadcrumbs: response.breadcrumbs,
-      // Facets'den filter seçeneklerini çıkar
       availableColors: this.extractAvailableColors(response.facets),
       availableSizes: this.extractAvailableSizes(response.facets),
       availableGenders: this.extractAvailableGenders(response.facets)
     };
 
-    if (environment.features?.enableLogging) {
-      console.log('Mapped API response:', {
-        productsCount: result.products.length,
-        totalCount: result.totalCount,
-        currentPage: result.currentPage,
-        facetsCount: response.facets?.length || 0
-      });
-    }
+    console.log('Mapped API response:', {
+      productsCount: result.products.length,
+      totalCount: result.totalCount,
+      currentPage: result.currentPage,
+      facetsCount: response.facets?.length || 0
+    });
 
     return result;
   }
@@ -455,16 +489,14 @@ export class ProductService {
   }
 
   private logError(method: string, error: any, params?: any): void {
-    if (environment.features.enableLogging) {
-      console.error(`ProductService.${method} error:`, {
-        error,
-        params,
-        timestamp: new Date().toISOString()
-      });
-    }
+    console.error(`ProductService.${method} error:`, {
+      error,
+      params,
+      timestamp: new Date().toISOString()
+    });
   }
 
-  // Diğer metodlar aynı kalıyor...
+  // Diğer metodlar...
   getProductById(id: string): Observable<Product> {
     const url = `${this.baseUrl}/products/${id}`;
     const headers = this.getHeaders();
@@ -565,7 +597,6 @@ export class EbebekProductMapper {
       .replace(/^-|-$/g, '');
   }
 
-  // Variantlardan renk çıkarma (orijinal method)
   private static extractColors(variantOptions: any[]): string[] | null {
     if (!variantOptions) return null;
     
@@ -583,7 +614,6 @@ export class EbebekProductMapper {
     return null;
   }
 
-  // Variantlardan beden çıkarma (orijinal method)
   private static extractSizes(variantOptions: any[]): string[] | null {
     if (!variantOptions) return null;
     
@@ -601,7 +631,6 @@ export class EbebekProductMapper {
     return null;
   }
 
-  // Kategorilerden cinsiyet çıkarma (orijinal method)
   private static extractGender(categories: any[]): 'erkek' | 'kız' | 'unisex' | null {
     if (!categories) return null;
     
@@ -616,7 +645,6 @@ export class EbebekProductMapper {
     return 'unisex';
   }
 
-  // Kategori isimlerinden cinsiyet çıkarma (fallback)
   private static extractGenderFromCategories(categoryNames: string[]): 'erkek' | 'kız' | 'unisex' {
     if (!categoryNames) return 'unisex';
     
@@ -631,7 +659,6 @@ export class EbebekProductMapper {
     return 'unisex';
   }
 
-  // Facets'den renk çıkarma (fallback)
   private static extractColorsFromFacets(facets?: EbebekFacet[]): string[] {
     if (!facets) return [];
     
@@ -643,7 +670,6 @@ export class EbebekProductMapper {
     });
   }
 
-  // Facets'den beden çıkarma (fallback)
   private static extractSizesFromFacets(facets?: EbebekFacet[]): string[] {
     if (!facets) return [];
     
@@ -653,14 +679,11 @@ export class EbebekProductMapper {
     return sizeFacet.values.slice(0, 3).map(sizeValue => sizeValue.name);
   }
 
-  // RGB kodundan renk adına çevirme
   private static mapRgbToColorName(rgbCode: string, apiName: string): string {
-    // Önce API'den gelen adı kullan
     if (apiName && apiName !== rgbCode) {
       return this.mapColorName(apiName);
     }
 
-    // RGB kod varsa çevir
     const rgbMap: { [key: string]: string } = {
       '0;0;255': 'mavi',
       '255;0;0': 'kirmizi',

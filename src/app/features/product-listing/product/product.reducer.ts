@@ -1,4 +1,4 @@
-// src/app/features/product-listing/product/product.reducer.ts - Updated with Facets Support
+// src/app/features/product-listing/product/product.reducer.ts - Fixed Filter State Management
 
 import { createReducer, on } from '@ngrx/store';
 import { ProductState } from './product.model';
@@ -17,7 +17,6 @@ export const initialState: ProductState = {
   lastAction: null,
   availableCategories: [],
   availableBrands: [],
-  // Yeni eklenen facets desteği
   availableColors: [],
   availableSizes: [],
   availableGenders: [],
@@ -38,17 +37,23 @@ export const productReducer = createReducer(
     lastAction: 'loadProducts'
   })),
 
-  on(ProductActions.loadProductsWithParams, (state, { filters, page, pageSize, sortBy }) => ({
-    ...state,
-    loading: true,
-    error: null,
-    filterError: null,
-    filters: filters ? { ...state.filters, ...filters } : state.filters,
-    currentPage: page || state.currentPage,
-    pageSize: pageSize || state.pageSize,
-    sortBy: sortBy || state.sortBy,
-    lastAction: 'loadProductsWithParams'
-  })),
+  on(ProductActions.loadProductsWithParams, (state, { filters, page, pageSize, sortBy }) => {
+    console.log('Reducer: loadProductsWithParams', { filters, page, pageSize, sortBy });
+    console.log('Current state filters:', state.filters);
+    console.log('New filters being applied:', filters);
+    
+    return {
+      ...state,
+      loading: true,
+      error: null,
+      filterError: null,
+      filters: filters ? { ...state.filters, ...filters } : state.filters,
+      currentPage: page || state.currentPage,
+      pageSize: pageSize || state.pageSize,
+      sortBy: sortBy || state.sortBy,
+      lastAction: 'loadProductsWithParams'
+    };
+  }),
 
   on(ProductActions.loadProductsSuccess, (state, { products, totalCount, currentPage, pageSize, facets }) => ({
     ...state,
@@ -129,22 +134,37 @@ export const productReducer = createReducer(
     selectedProduct: null
   })),
 
-  // Filters
-  on(ProductActions.setFilters, (state, { filters }) => ({
-    ...state,
-    filters: { ...state.filters, ...filters },
-    currentPage: 1, // Reset to first page when filtering
-    filterError: null
-  })),
+  // Filters - DÜZELTİLDİ
+  on(ProductActions.setFilters, (state, { filters }) => {
+    console.log('Reducer: setFilters called');
+    console.log('Current state filters:', state.filters);
+    console.log('New filters to merge:', filters);
+    
+    const updatedFilters = { ...state.filters, ...filters };
+    console.log('Final merged filters:', updatedFilters);
+    
+    return {
+      ...state,
+      filters: updatedFilters,
+      currentPage: 1, // Reset to first page when filtering
+      filterError: null
+    };
+  }),
 
-  on(ProductActions.clearFilters, (state) => ({
-    ...state,
-    filters: {},
-    currentPage: 1,
-    filterError: null
-  })),
+  on(ProductActions.clearFilters, (state) => {
+    console.log('Reducer: clearFilters called');
+    return {
+      ...state,
+      filters: {},
+      currentPage: 1,
+      filterError: null
+    };
+  }),
 
   on(ProductActions.addFilter, (state, { filterType, value }) => {
+    console.log('Reducer: addFilter called', { filterType, value });
+    console.log('Current filter value:', state.filters[filterType]);
+    
     const currentValues = state.filters[filterType] as any;
     let newValues: any;
 
@@ -158,6 +178,8 @@ export const productReducer = createReducer(
       newValues = [currentValues, value];
     }
 
+    console.log('New filter values:', newValues);
+
     return {
       ...state,
       filters: {
@@ -170,11 +192,15 @@ export const productReducer = createReducer(
   }),
 
   on(ProductActions.removeFilter, (state, { filterType, value }) => {
+    console.log('Reducer: removeFilter called', { filterType, value });
+    console.log('Current filter value:', state.filters[filterType]);
+    
     const currentValues = state.filters[filterType] as any;
 
     if (value === undefined) {
       // Remove entire filter
       const { [filterType]: removed, ...remainingFilters } = state.filters;
+      console.log('Removing entire filter, remaining:', remainingFilters);
       return {
         ...state,
         filters: remainingFilters,
@@ -185,12 +211,18 @@ export const productReducer = createReducer(
 
     if (Array.isArray(currentValues)) {
       const newValues = currentValues.filter((v: any) => v !== value);
+      console.log('Filtered array values:', newValues);
+      
+      const updatedFilters = { ...state.filters };
+      if (newValues.length > 0) {
+        updatedFilters[filterType] = newValues;
+      } else {
+        delete updatedFilters[filterType];
+      }
+      
       return {
         ...state,
-        filters: {
-          ...state.filters,
-          [filterType]: newValues.length > 0 ? newValues : undefined
-        },
+        filters: updatedFilters,
         currentPage: 1,
         filterError: null
       };
@@ -224,7 +256,7 @@ export const productReducer = createReducer(
   on(ProductActions.setPageSize, (state, { pageSize }) => ({
     ...state,
     pageSize: Math.max(1, pageSize),
-    currentPage: 1 // Reset to first page when changing page size
+    currentPage: 1
   })),
 
   on(ProductActions.nextPage, (state) => ({
@@ -261,7 +293,7 @@ export const productReducer = createReducer(
     filterError: error
   })),
 
-  // Facets Support - Yeni eklenenler
+  // Facets Support
   on(ProductActions.updateFilterOptions, (state, { facets, availableColors, availableSizes, availableGenders }) => ({
     ...state,
     facets: facets || state.facets,
@@ -276,7 +308,7 @@ export const productReducer = createReducer(
     availableColors,
     availableSizes,
     availableGenders,
-    availableRatings: availableRatings || state.availableRatings,
+    availableRatings, // Artık her zaman array gelecek
     filterError: null
   })),
 
@@ -304,13 +336,11 @@ export const productReducer = createReducer(
 
   // Analytics - Optional tracking
   on(ProductActions.trackFilterUsage, (state, { filterType, filterValue, timestamp }) => {
-    // Bu analytics için kullanılabilir, state'i değiştirmek gerekmiyor
     console.log(`Filter used: ${filterType} = ${filterValue} at ${new Date(timestamp).toISOString()}`);
     return state;
   }),
 
   on(ProductActions.trackSearchQuery, (state, { searchTerm, resultCount, timestamp }) => {
-    // Bu analytics için kullanılabilir, state'i değiştirmek gerekmiyor
     console.log(`Search performed: "${searchTerm}" returned ${resultCount} results at ${new Date(timestamp).toISOString()}`);
     return state;
   })

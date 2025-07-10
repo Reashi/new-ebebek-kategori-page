@@ -1,10 +1,10 @@
-// src/app/features/product-listing/product/product.model.ts - Updated with Facets Support
+// src/app/features/product-listing/product/product.model.ts - Fixed Multi-Brand Support
 
 export interface Product {
   id: string;
   name: string;
   price: number;
-  originalPrice?: number; // İndirim hesaplamak için
+  originalPrice?: number;
   description: string;
   imageUrl: string;
   categoryId: string;
@@ -22,7 +22,7 @@ export interface Product {
 
 export interface ProductFilters {
   categoryId?: string;
-  brandIds?: string[];
+  brandIds?: string[]; // Çoklu marka seçimi için array
   sizes?: string[];
   genders?: string[];
   colors?: string[];
@@ -35,6 +35,9 @@ export interface ProductFilters {
   inStockOnly?: boolean;
   onSaleOnly?: boolean;
   isNew?: boolean;
+  
+  // Index signature ekleyerek dinamik property assignment'a izin ver
+  [key: string]: any;
 }
 
 export interface ProductState {
@@ -46,30 +49,29 @@ export interface ProductState {
   totalCount: number;
   currentPage: number;
   pageSize: number;
-  sortBy?: string;
-  lastAction?: string | null;
+  sortBy: string;
+  lastAction: string | null;
   
-  // Orijinal filter seçenekleri
-  availableCategories?: any[];
-  availableBrands?: any[];
-  
-  // Facets'den gelen filter seçenekleri
-  availableColors?: any[];
-  availableSizes?: any[];
-  availableGenders?: any[];
-  availableRatings?: any[];
+  // Filter seçenekleri - TİP HATASI DÜZELTİLDİ
+  availableCategories: Category[];
+  availableBrands: Brand[];
+  availableColors: ColorOption[];
+  availableSizes: SizeOption[];
+  availableGenders: GenderOption[];
+  availableRatings: RatingOption[]; // any[] yerine RatingOption[]
   
   // API'den gelen raw facets verisi
-  facets?: any[];
+  facets: Facet[];
   
   // Hata yönetimi
-  filterError?: string | null;
+  filterError: string | null;
 }
 
-// Filter seçenekleri için yardımcı interface'ler
+// Filter seçenekleri için tip tanımları
 export interface Category {
   id: string;
   name: string;
+  count?: number;
 }
 
 export interface Brand {
@@ -88,28 +90,30 @@ export interface ColorOption {
   id: string;
   name: string;
   hexCode: string;
-  rgbCode?: string; // API'den gelen RGB kodu
+  rgbCode?: string;
   count?: number;
 }
 
 export interface SizeOption {
   id: string;
   name: string;
-  category?: string; // Yaş grubu, beden kategorisi vb.
+  category?: string;
   count?: number;
 }
 
 export interface GenderOption {
   id: string;
   name: string;
-  apiCode?: string; // API'den gelen orijinal kod
+  apiCode?: string;
   count?: number;
 }
 
 export interface RatingOption {
+  id: string;
+  name: string;
   value: number;
-  count: number;
-  label?: string; // "4 yıldız ve üzeri" gibi
+  count?: number;
+  label?: string;
 }
 
 // Facets için tip tanımları
@@ -141,7 +145,7 @@ export interface ApiFilterOptions {
 // Component'ler için helper interface'ler
 export interface FilterState {
   selectedCategoryId: string;
-  selectedBrandIds: string[];
+  selectedBrandIds: string[]; // Çoklu marka seçimi
   selectedSizes: string[];
   selectedGenders: string[];
   selectedColors: string[];

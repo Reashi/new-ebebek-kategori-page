@@ -1,4 +1,4 @@
-// src/app/features/product-listing/product/product.actions.ts - Updated with Facets Support
+// src/app/features/product-listing/product/product.actions.ts - Updated with Fixed Types
 
 import { createAction, props } from '@ngrx/store';
 import { Product, ProductFilters } from './product.model';
@@ -122,7 +122,7 @@ export const previousPage = createAction(
   '[Product Pagination] Previous Page'
 );
 
-// Filter Options Actions - Yeni eklenenler
+// Filter Options Actions
 export const loadFilterOptions = createAction(
   '[Product Filter] Load Filter Options'
 );
@@ -137,7 +137,7 @@ export const loadFilterOptionsFailure = createAction(
   props<{ error: string }>()
 );
 
-// Facets Support Actions - Yeni eklenenler
+// Facets Support Actions
 export const updateFilterOptions = createAction(
   '[Product Filter] Update Filter Options from Facets',
   props<{ 
@@ -154,7 +154,7 @@ export const updateFilterOptionsSuccess = createAction(
     availableColors: any[];
     availableSizes: any[];
     availableGenders: any[];
-    availableRatings?: any[];
+    availableRatings: any[]; // Artık opsiyonel değil, boş array gönderilir
   }>()
 );
 
@@ -167,7 +167,7 @@ export const retryLastAction = createAction(
   '[Product] Retry Last Action'
 );
 
-// Utility Actions - Hata durumları için
+// Utility Actions
 export const showFilterError = createAction(
   '[Product Filter] Show Filter Error',
   props<{ message: string }>()
