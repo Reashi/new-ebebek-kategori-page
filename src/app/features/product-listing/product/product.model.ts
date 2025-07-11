@@ -75,6 +75,7 @@ export interface Category {
 }
 
 export interface FilterOption {
+value: any;
   id: string;
   name: string;
   count?: number;

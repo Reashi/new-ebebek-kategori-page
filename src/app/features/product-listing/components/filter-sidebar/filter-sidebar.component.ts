@@ -58,18 +58,45 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
 
   // Fallback veriler (API'den gelmezse)
   defaultSizes: FilterOption[] = [
-    { id: '0-3-ay', name: '0-3 Ay', count: 25 },
-    { id: '3-6-ay', name: '3-6 Ay', count: 30 },
-    { id: '6-12-ay', name: '6-12 Ay', count: 35 },
-    { id: '12-18-ay', name: '12-18 Ay', count: 28 },
-    { id: '18-24-ay', name: '18-24 Ay', count: 20 },
-    { id: '2-3-yas', name: '2-3 Yaş', count: 18 }
+    {
+      id: '0-3-ay', name: '0-3 Ay', count: 25,
+      value: undefined
+    },
+    {
+      id: '3-6-ay', name: '3-6 Ay', count: 30,
+      value: undefined
+    },
+    {
+      id: '6-12-ay', name: '6-12 Ay', count: 35,
+      value: undefined
+    },
+    {
+      id: '12-18-ay', name: '12-18 Ay', count: 28,
+      value: undefined
+    },
+    {
+      id: '18-24-ay', name: '18-24 Ay', count: 20,
+      value: undefined
+    },
+    {
+      id: '2-3-yas', name: '2-3 Yaş', count: 18,
+      value: undefined
+    }
   ];
 
   defaultGenders: FilterOption[] = [
-    { id: 'erkek', name: 'Erkek', count: 45 },
-    { id: 'kız', name: 'Kız', count: 42 },
-    { id: 'unisex', name: 'Unisex', count: 38 }
+    {
+      id: 'erkek', name: 'Erkek', count: 45,
+      value: undefined
+    },
+    {
+      id: 'kız', name: 'Kız', count: 42,
+      value: undefined
+    },
+    {
+      id: 'unisex', name: 'Unisex', count: 38,
+      value: undefined
+    }
   ];
 
   defaultColors: ColorOption[] = [
@@ -97,10 +124,22 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   ];
 
   defaultRatingOptions: FilterOption[] = [
-    { id: '4', name: '4 yıldız ve üzeri', count: 25 },
-    { id: '3', name: '3 yıldız ve üzeri', count: 45 },
-    { id: '2', name: '2 yıldız ve üzeri', count: 15 },
-    { id: '1', name: '1 yıldız ve üzeri', count: 8 }
+    {
+      id: '4', name: '4 yıldız ve üzeri', count: 25,
+      value: undefined
+    },
+    {
+      id: '3', name: '3 yıldız ve üzeri', count: 45,
+      value: undefined
+    },
+    {
+      id: '2', name: '2 yıldız ve üzeri', count: 15,
+      value: undefined
+    },
+    {
+      id: '1', name: '1 yıldız ve üzeri', count: 8,
+      value: undefined
+    }
   ];
 
   // Form data
@@ -156,69 +195,71 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   updateFilterOptionsFromApi(facets: any[]) {
     if (!facets) return;
 
-  console.log('Facets received:', facets);
+    console.log('Facets received:', facets); // Debug için
 
-  // Size facet'i işle - CODE ve NAME'i ayır
-  const sizeFacet = facets.find(f => f.code === 'size');
-  if (sizeFacet?.values) {
-    this.availableSizes = sizeFacet.values.map((value: any) => ({
-      id: value.code,        // API code: "1,5 Yaş"
-      name: value.name,      // Display name: "1.5 Yaş" veya "1,5 Yaş"
-      count: value.count
-    }));
-    console.log('Processed sizes:', this.availableSizes);
-  }
-
-  // Gender facet'i işle - API CODE ve INTERNAL CODE'u ayır
-  const genderFacet = facets.find(f => f.code === 'gender');
-  if (genderFacet?.values) {
-    this.availableGenders = genderFacet.values.map((value: any) => ({
-      id: this.mapGenderApiToInternal(value.code), // Internal: "erkek"
-      name: value.name,                            // Display: "Erkek Bebek"
-      apiCode: value.code,                         // API: "Erkek Bebek"
-      count: value.count
-    }));
-    console.log('Processed genders:', this.availableGenders);
-  }
-
-  // Color facet'i işle - RGB CODE ve INTERNAL CODE'u ayır
-  const colorFacet = facets.find(f => f.code === 'color');
-  if (colorFacet?.values) {
-    this.availableColors = colorFacet.values.map((value: any) => ({
-      id: this.mapRgbToColorId(value.code),        // Internal: "mavi"
-      name: value.name,                            // Display: "Mavi"
-      rgbCode: value.code,                         // API: "0;0;255"
-      hexCode: this.rgbToHex(value.code) || this.getDefaultColorHex(value.name),
-      count: value.count
-    }));
-    console.log('Processed colors:', this.availableColors);
-  }
-
-  // Brand facet'i işle - CODE string olarak kaydet
-  const brandFacet = facets.find(f => f.code === 'brand');
-  if (brandFacet?.values) {
-    this.brands = brandFacet.values.map((value: any) => ({
-      id: value.code.toString(),  // API code string olarak
-      name: value.name,           // Display name
-      productCount: value.count
-    }));
-    console.log('Processed brands:', this.brands);
+    // Size facet'i işle - Type safety ile
+    const sizeFacet = facets.find(f => f.code === 'size');
+    if (sizeFacet?.values) {
+      this.availableSizes = sizeFacet.values
+        .filter((value: any) => value.code && value.name) // Undefined değerleri filtrele
+        .map((value: any) => ({
+          id: String(value.code), // Kesinlikle string olsun
+          name: String(value.name),
+          count: Number(value.count) || 0
+        }));
     }
 
-  // Rating facet'i işle
-  const ratingFacet = facets.find(f => f.code === 'review_rating_star');
-  if (ratingFacet?.values) {
-    this.availableRatings = ratingFacet.values
-      .filter((value: any) => !value.name.includes('Puansız'))
-      .map((value: any) => ({
-        id: value.code || value.name,
-        name: value.name,
-        count: value.count
-      }))
-      .filter((item: RatingOption) => Number(item.id) > 0);
-    console.log('Processed ratings:', this.availableRatings);
+    // Gender facet'i işle - Type safety ile
+    const genderFacet = facets.find(f => f.code === 'gender');
+    if (genderFacet?.values) {
+      this.availableGenders = genderFacet.values
+        .filter((value: any) => value.code && value.name)
+        .map((value: any) => ({
+          id: this.mapGenderCode(String(value.code)), // Kesinlikle string olsun
+          name: String(value.name),
+          count: Number(value.count) || 0
+        }));
+    }
+
+    // Color facet'i işle - Type safety ile
+    const colorFacet = facets.find(f => f.code === 'color');
+    if (colorFacet?.values) {
+      this.availableColors = colorFacet.values
+        .filter((value: any) => value.code && value.name)
+        .map((value: any) => ({
+          id: this.mapColorCode(String(value.code)),
+          name: String(value.name),
+          hexCode: this.rgbToHex(String(value.code)) || this.getDefaultColorHex(String(value.name))
+        }));
+    }
+
+    // Rating facet'i işle - Type safety ile
+    const ratingFacet = facets.find(f => f.code === 'review_rating_star');
+    if (ratingFacet?.values) {
+      this.availableRatings = ratingFacet.values
+        .filter((value: any) => value.name && !value.name.includes('Puansız'))
+        .map((value: any) => ({
+          id: String(value.code || value.name),
+          name: String(value.name),
+          count: Number(value.count) || 0
+        }))
+        .filter((item: FilterOption) => Number(item.id) > 0);
+    }
+
+    // Brand facet'i işle - Type safety ile
+    const brandFacet = facets.find(f => f.code === 'brand');
+    if (brandFacet?.values) {
+      console.log('Brand facet values:', brandFacet.values); // Debug için
+      this.brands = brandFacet.values
+        .filter((value: any) => value.code && value.name)
+        .map((value: any) => ({
+          id: String(value.code), // Code'u string'e çevir
+          name: String(value.name),
+          productCount: Number(value.count) || 0
+        }));
+      console.log('Processed brands:', this.brands); // Debug için
+    }
   }
-}
   private mapRgbToColorId(rgbCode: string): string {
     const rgbMap: { [key: string]: string } = {
       '0;0;255': 'mavi',
@@ -335,7 +376,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     return this.availableColors.length > 0 ? this.availableColors : this.defaultColors;
   }
 
-  get ratingOptions(): any[] {
+  get ratingOptions(): FilterOption[] {
     return this.availableRatings.length > 0 ? this.availableRatings : this.defaultRatingOptions;
   }
 
@@ -348,26 +389,14 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   }
 
   isSelected(filterType: keyof ProductFilters, value: string | number): boolean {
-  const filterValue = this.currentFilters[filterType];
-  
-  if (Array.isArray(filterValue)) {
-    // Özel durumlar için mapping
-    if (filterType === 'genders' && typeof value === 'string') {
-      const internalCode = this.mapGenderApiToInternal(value);
-      return filterValue.includes(internalCode);
-    }
+    if (!value) return false; // undefined/null değerler için false döndür
     
-    if (filterType === 'colors' && typeof value === 'string') {
-      const internalCode = this.mapRgbToColorId(value);
-      return filterValue.includes(internalCode);
+    const filterValue = this.currentFilters[filterType];
+    if (Array.isArray(filterValue)) {
+      return filterValue.includes(value as never);
     }
-    
-    // Diğer durumlar için direkt kod karşılaştırması
-    return filterValue.includes(value as never);
+    return filterValue === value;
   }
-  
-  return filterValue === value;
-}
 
   onCategoryChange() {
     this.store.dispatch(ProductActions.setFilters({
@@ -375,65 +404,55 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     }));
   }
 
-  onSizeChange(sizeCode: string, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    const currentSizes = this.currentFilters.sizes || [];
+  onBrandChange(brandId: string, event: Event) {
+    if (!brandId) return; // Type safety check
     
-    console.log('Size changed:', { sizeCode, checked, currentSizes });
-    
-    let newSizes: string[];
-    if (checked) {
-      newSizes = [...currentSizes, sizeCode]; // CODE değerini kullan
-    } else {
-      newSizes = currentSizes.filter(code => code !== sizeCode); // CODE ile karşılaştır
-    }
-
-    console.log('New sizes array (with codes):', newSizes);
-
-    this.store.dispatch(ProductActions.setFilters({
-      filters: { sizes: newSizes.length > 0 ? newSizes : undefined }
-    }));
-  }
-
-  // Marka seçimi - CODE tabanlı filtreleme (düzeltilmiş)
-  onBrandChange(brandCode: string, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     const currentBrands = this.currentFilters.brandIds || [];
     
-    console.log('Brand changed:', { brandCode, checked, currentBrands });
-    
     let newBrands: string[];
     if (checked) {
-      newBrands = [...currentBrands, brandCode]; // CODE değerini kullan
+      newBrands = [...currentBrands, brandId];
     } else {
-      newBrands = currentBrands.filter(code => code !== brandCode); // CODE ile karşılaştır
+      newBrands = currentBrands.filter(id => id !== brandId);
     }
-
-    console.log('New brands array (with codes):', newBrands);
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { brandIds: newBrands.length > 0 ? newBrands : undefined }
     }));
   }
 
+  onSizeChange(sizeId: string, event: Event) {
+    if (!sizeId) return; // Type safety check
+    
+    const checked = (event.target as HTMLInputElement).checked;
+    const currentSizes = this.currentFilters.sizes || [];
+    
+    let newSizes: string[];
+    if (checked) {
+      newSizes = [...currentSizes, sizeId];
+    } else {
+      newSizes = currentSizes.filter(id => id !== sizeId);
+    }
+
+    this.store.dispatch(ProductActions.setFilters({
+      filters: { sizes: newSizes.length > 0 ? newSizes : undefined }
+    }));
+  }
+
   // Cinsiyet seçimi - CODE tabanlı filtreleme
-  onGenderChange(genderCode: string, event: Event) {
+  onGenderChange(genderId: string, event: Event) {
+    if (!genderId) return; // Type safety check
+    
     const checked = (event.target as HTMLInputElement).checked;
     const currentGenders = this.currentFilters.genders || [];
     
-    console.log('Gender changed:', { genderCode, checked, currentGenders });
-    
-    // API'den gelen cinsiyet kodlarını internal kodlara çevir
-    const internalGenderCode = this.mapGenderApiToInternal(genderCode);
-    
     let newGenders: string[];
     if (checked) {
-      newGenders = [...currentGenders, internalGenderCode];
+      newGenders = [...currentGenders, genderId];
     } else {
-      newGenders = currentGenders.filter(code => code !== internalGenderCode);
+      newGenders = currentGenders.filter(id => id !== genderId);
     }
-
-    console.log('New genders array (with internal codes):', newGenders);
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { genders: newGenders.length > 0 ? newGenders : undefined }
