@@ -64,9 +64,9 @@
           class="checkbox-option">
           <input 
             type="checkbox"
-            [value]="size.id"
-            [checked]="size.id && isSelected('sizes', size.id)"
-            (change)="size.id && onSizeChange(size.id, $event)">
+            [value]="size.code || size.id"
+            [checked]="size.code ? isSelected('sizes', size.code) : false"
+            (change)="size.code && onSizeChange(size.code, $event)">
           <span class="checkbox-label">
             {{ size.name }}
             <span class="count" *ngIf="size.count">({{ size.count }})</span>
@@ -84,9 +84,9 @@
           class="checkbox-option">
           <input 
             type="checkbox"
-            [value]="gender.id"
-            [checked]="gender.id && isSelected('genders', gender.id)"
-            (change)="gender.id && onGenderChange(gender.id, $event)">
+            [value]="gender.code || gender.id"
+            [checked]="gender.code ? isSelected('genders', gender.code) : false"
+            (change)="gender.code && onGenderChange(gender.code, $event)">
           <span class="checkbox-label">
             {{ gender.name }}
             <span class="count" *ngIf="gender.count">({{ gender.count }})</span>
@@ -95,15 +95,15 @@
       </div>
     </div>
 
-    <!-- Renk -->
+    <!-- Renk - DÜZELTİLDİ -->
     <div class="filter-section">
       <h4 class="filter-title">Renk</h4>
       <div class="color-grid">
         <div 
           *ngFor="let color of colors; let i = index" 
           class="color-option"
-          [class.selected]="isSelected('colors', color.id)"
-          (click)="onColorChange(color.id)"
+          [class.selected]="isSelected('colors', color.code || color.id || '')"
+          (click)="(color.code || color.id) && onColorChange(color.code || color.id)"
           [title]="color.name">
           <div 
             class="color-circle"
@@ -153,16 +153,16 @@
           class="checkbox-option">
           <input 
             type="checkbox"
-            [value]="rating.value"
-            [checked]="isSelected('ratings', rating.value)"
-            (change)="onRatingChange(rating.value, $event)">
+            [value]="rating.code || rating.value"
+            [checked]="isSelected('ratings', rating.code || rating.value || '')"
+            (change)="(rating.code || rating.value) && onRatingChange(rating.code || rating.value, $event)">
           <span class="checkbox-label">
             <div class="stars">
-              <span *ngFor="let star of getStars(rating.value)" 
+              <span *ngFor="let star of getStars(rating.value || (rating.name ? extractRatingValue(rating.name) : 0))" 
                     class="star"
-                    [class.filled]="star <= rating.value">★</span>
+                    [class.filled]="star <= (rating.value || (rating.name ? extractRatingValue(rating.name) : 0))">★</span>
             </div>
-            ve üzeri
+            {{ rating.name || (rating.value ? rating.value + ' ve üzeri' : '') }}
             <span class="count" *ngIf="rating.count">({{ rating.count }})</span>
           </span>
         </label>

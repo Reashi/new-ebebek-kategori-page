@@ -1,4 +1,4 @@
-// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts - Updated
+// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts - Fixed API Code Usage
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -7,9 +7,30 @@ import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { ProductFilters, Category, Brand, FilterOption, ColorOption } from '../../product/product.model';
+import { ProductFilters, Category, Brand } from '../../product/product.model';
 import * as ProductActions from '../../product/product.actions';
 import * as ProductSelectors from '../../product/product.selectors';
+
+// FİX: Enhanced API Facet interfaces
+interface ApiFacetValue {
+  code: string;    // API'nin kullandığı değer (örn: "1,5 Yaş")
+  name: string;    // Kullanıcıya gösterilen değer (örn: "1.5 Yaş")
+  count: number;
+  selected?: boolean;
+}
+
+interface FilterOptionWithCode {
+  id?: string;      // Fallback için
+  code?: string;    // API code - öncelik
+  name: string;     // Display name
+  count?: number;
+  value?: any;      // Eski interface uyumluluğu için
+}
+
+interface ColorOptionWithCode extends FilterOptionWithCode {
+  hexCode: string;
+  rgbCode?: string;
+}
 
 @Component({
   selector: 'app-filter-sidebar',
@@ -25,7 +46,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   filters$: Observable<ProductFilters>;
   hasActiveFilters$: Observable<boolean>;
 
-  // Filter data - Bunlar API'den gelecek
+  // Filter data - Static kategoriler
   categories: Category[] = [
     { id: 'strollers', name: 'Bebek Arabaları' },
     { id: 'food', name: 'Mama & Beslenme' },
@@ -50,68 +71,41 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { id: 'mam', name: 'MAM', productCount: 11 }
   ];
 
-  // API'den gelecek veriler
-  availableSizes: FilterOption[] = [];
-  availableGenders: FilterOption[] = [];
-  availableColors: ColorOption[] = [];
-  availableRatings: FilterOption[] = [];
+  // API'den gelecek veriler - Enhanced with code property
+  availableSizes: FilterOptionWithCode[] = [];
+  availableGenders: FilterOptionWithCode[] = [];
+  availableColors: ColorOptionWithCode[] = [];
+  availableRatings: FilterOptionWithCode[] = [];
 
-  // Fallback veriler (API'den gelmezse)
-  defaultSizes: FilterOption[] = [
-    {
-      id: '0-3-ay', name: '0-3 Ay', count: 25,
-      value: undefined
-    },
-    {
-      id: '3-6-ay', name: '3-6 Ay', count: 30,
-      value: undefined
-    },
-    {
-      id: '6-12-ay', name: '6-12 Ay', count: 35,
-      value: undefined
-    },
-    {
-      id: '12-18-ay', name: '12-18 Ay', count: 28,
-      value: undefined
-    },
-    {
-      id: '18-24-ay', name: '18-24 Ay', count: 20,
-      value: undefined
-    },
-    {
-      id: '2-3-yas', name: '2-3 Yaş', count: 18,
-      value: undefined
-    }
+  // Fallback veriler - Enhanced with code property
+  defaultSizes: FilterOptionWithCode[] = [
+    { id: '0-3-ay', code: '0-3 Ay', name: '0-3 Ay', count: 25 },
+    { id: '3-6-ay', code: '3-6 Ay', name: '3-6 Ay', count: 30 },
+    { id: '6-12-ay', code: '6-12 Ay', name: '6-12 Ay', count: 35 },
+    { id: '12-18-ay', code: '12-18 Ay', name: '12-18 Ay', count: 28 },
+    { id: '18-24-ay', code: '18-24 Ay', name: '18-24 Ay', count: 20 },
+    { id: '2-3-yas', code: '2-3 Yaş', name: '2-3 Yaş', count: 18 }
   ];
 
-  defaultGenders: FilterOption[] = [
-    {
-      id: 'erkek', name: 'Erkek', count: 45,
-      value: undefined
-    },
-    {
-      id: 'kız', name: 'Kız', count: 42,
-      value: undefined
-    },
-    {
-      id: 'unisex', name: 'Unisex', count: 38,
-      value: undefined
-    }
+  defaultGenders: FilterOptionWithCode[] = [
+    { id: 'erkek', code: 'Erkek Bebek', name: 'Erkek', count: 45 },
+    { id: 'kız', code: 'Kız Bebek', name: 'Kız', count: 42 },
+    { id: 'unisex', code: 'Unisex', name: 'Unisex', count: 38 }
   ];
 
-  defaultColors: ColorOption[] = [
-    { id: 'mavi', name: 'Mavi', hexCode: '#3498db' },
-    { id: 'kirmizi', name: 'Kırmızı', hexCode: '#e74c3c' },
-    { id: 'yesil', name: 'Yeşil', hexCode: '#27ae60' },
-    { id: 'sari', name: 'Sarı', hexCode: '#f1c40f' },
-    { id: 'pembe', name: 'Pembe', hexCode: '#e91e63' },
-    { id: 'mor', name: 'Mor', hexCode: '#9b59b6' },
-    { id: 'turuncu', name: 'Turuncu', hexCode: '#e67e22' },
-    { id: 'kahverengi', name: 'Kahverengi', hexCode: '#8d6e63' },
-    { id: 'gri', name: 'Gri', hexCode: '#95a5a6' },
-    { id: 'siyah', name: 'Siyah', hexCode: '#2c3e50' },
-    { id: 'beyaz', name: 'Beyaz', hexCode: '#ecf0f1' },
-    { id: 'krem', name: 'Krem', hexCode: '#f5f5dc' }
+  defaultColors: ColorOptionWithCode[] = [
+    { id: 'mavi', code: '0;0;255', name: 'Mavi', hexCode: '#3498db' },
+    { id: 'kirmizi', code: '255;0;0', name: 'Kırmızı', hexCode: '#e74c3c' },
+    { id: 'yesil', code: '0;128;0', name: 'Yeşil', hexCode: '#27ae60' },
+    { id: 'sari', code: '255;255;0', name: 'Sarı', hexCode: '#f1c40f' },
+    { id: 'pembe', code: '255;0;255', name: 'Pembe', hexCode: '#e91e63' },
+    { id: 'mor', code: '128;0;128', name: 'Mor', hexCode: '#9b59b6' },
+    { id: 'turuncu', code: '255;165;0', name: 'Turuncu', hexCode: '#e67e22' },
+    { id: 'kahverengi', code: '165;42;42', name: 'Kahverengi', hexCode: '#8d6e63' },
+    { id: 'gri', code: '128;128;128', name: 'Gri', hexCode: '#95a5a6' },
+    { id: 'siyah', code: '0;0;0', name: 'Siyah', hexCode: '#2c3e50' },
+    { id: 'beyaz', code: '255;255;255', name: 'Beyaz', hexCode: '#ecf0f1' },
+    { id: 'krem', code: '194;178;128', name: 'Krem', hexCode: '#f5f5dc' }
   ];
 
   priceRanges = [
@@ -123,23 +117,11 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { min: 1000, max: 999999, label: '1000+ TL' }
   ];
 
-  defaultRatingOptions: FilterOption[] = [
-    {
-      id: '4', name: '4 yıldız ve üzeri', count: 25,
-      value: undefined
-    },
-    {
-      id: '3', name: '3 yıldız ve üzeri', count: 45,
-      value: undefined
-    },
-    {
-      id: '2', name: '2 yıldız ve üzeri', count: 15,
-      value: undefined
-    },
-    {
-      id: '1', name: '1 yıldız ve üzeri', count: 8,
-      value: undefined
-    }
+  defaultRatingOptions: FilterOptionWithCode[] = [
+    { id: '4', code: '4* ve üzeri', name: '4 yıldız ve üzeri', count: 25, value: 4 },
+    { id: '3', code: '3* ve üzeri', name: '3 yıldız ve üzeri', count: 45, value: 3 },
+    { id: '2', code: '2* ve üzeri', name: '2 yıldız ve üzeri', count: 15, value: 2 },
+    { id: '1', code: '1* ve üzeri', name: '1 yıldız ve üzeri', count: 8, value: 1 }
   ];
 
   // Form data
@@ -182,110 +164,96 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadFilterOptionsFromApi() {
-    // Bu method artık ngOnInit'de dispatch ediliyor
-    // Fallback olarak default değerleri yükle
-    this.availableSizes = this.defaultSizes;
-    this.availableGenders = this.defaultGenders;
-    this.availableColors = this.defaultColors;
-    this.availableRatings = [...this.defaultRatingOptions];
-  }
-
-  // API'den gelen facets verisini işleme methodu
+  // FİX: API'den gelen facets verisini işleme - CODE odaklı
   updateFilterOptionsFromApi(facets: any[]) {
     if (!facets) return;
 
-    console.log('Facets received:', facets); // Debug için
+    console.log('Facets received for processing:', facets);
 
-    // Size facet'i işle - Type safety ile
+    // Size facet'i işle - CODE değerini kullan
     const sizeFacet = facets.find(f => f.code === 'size');
     if (sizeFacet?.values) {
+      console.log('Size facet values:', sizeFacet.values);
       this.availableSizes = sizeFacet.values
-        .filter((value: any) => value.code && value.name) // Undefined değerleri filtrele
-        .map((value: any) => ({
-          id: String(value.code), // Kesinlikle string olsun
-          name: String(value.name),
+        .filter((value: ApiFacetValue) => value.code && value.name)
+        .map((value: ApiFacetValue) => ({
+          id: this.normalizeSizeCode(value.code), // Backward compatibility
+          code: value.code, // API'nin beklediği değer - ÖNEMLİ!
+          name: value.name, // UI'da gösterilen değer
           count: Number(value.count) || 0
         }));
+      console.log('Processed sizes:', this.availableSizes);
     }
 
-    // Gender facet'i işle - Type safety ile
+    // Gender facet'i işle - CODE değerini kullan
     const genderFacet = facets.find(f => f.code === 'gender');
     if (genderFacet?.values) {
+      console.log('Gender facet values:', genderFacet.values);
       this.availableGenders = genderFacet.values
-        .filter((value: any) => value.code && value.name)
-        .map((value: any) => ({
-          id: this.mapGenderCode(String(value.code)), // Kesinlikle string olsun
-          name: String(value.name),
+        .filter((value: ApiFacetValue) => value.code && value.name)
+        .map((value: ApiFacetValue) => ({
+          id: this.mapGenderCode(value.code), // Backward compatibility
+          code: value.code, // API'nin beklediği değer - ÖNEMLİ!
+          name: value.name, // UI'da gösterilen değer
           count: Number(value.count) || 0
         }));
+      console.log('Processed genders:', this.availableGenders);
     }
 
-    // Color facet'i işle - Type safety ile
+    // Color facet'i işle - CODE değerini kullan
     const colorFacet = facets.find(f => f.code === 'color');
     if (colorFacet?.values) {
+      console.log('Color facet values:', colorFacet.values);
       this.availableColors = colorFacet.values
-        .filter((value: any) => value.code && value.name)
-        .map((value: any) => ({
-          id: this.mapColorCode(String(value.code)),
-          name: String(value.name),
-          hexCode: this.rgbToHex(String(value.code)) || this.getDefaultColorHex(String(value.name))
+        .filter((value: ApiFacetValue) => value.code && value.name)
+        .map((value: ApiFacetValue) => ({
+          id: this.mapColorCode(value.code), // Backward compatibility
+          code: value.code, // API'nin beklediği değer (RGB format) - ÖNEMLİ!
+          name: value.name, // UI'da gösterilen değer
+          hexCode: this.rgbToHex(value.code) || this.getDefaultColorHex(value.name)
         }));
+      console.log('Processed colors:', this.availableColors);
     }
 
-    // Rating facet'i işle - Type safety ile
+    // Rating facet'i işle - CODE değerini kullan
     const ratingFacet = facets.find(f => f.code === 'review_rating_star');
     if (ratingFacet?.values) {
+      console.log('Rating facet values:', ratingFacet.values);
       this.availableRatings = ratingFacet.values
-        .filter((value: any) => value.name && !value.name.includes('Puansız'))
-        .map((value: any) => ({
-          id: String(value.code || value.name),
-          name: String(value.name),
-          count: Number(value.count) || 0
+        .filter((value: ApiFacetValue) => value.name && !value.name.includes('Puansız'))
+        .map((value: ApiFacetValue) => ({
+          id: String(value.code || this.extractRatingValue(value.name)), // Backward compatibility
+          code: value.code || value.name, // API'nin beklediği değer - ÖNEMLİ!
+          name: value.name, // UI'da gösterilen değer
+          count: Number(value.count) || 0,
+          value: this.extractRatingValue(value.name)
         }))
-        .filter((item: FilterOption) => Number(item.id) > 0);
+        .filter((item: FilterOptionWithCode) => (item.value || 0) > 0);
+      console.log('Processed ratings:', this.availableRatings);
     }
 
-    // Brand facet'i işle - Type safety ile
+    // Brand facet'i işle - CODE değerini kullan
     const brandFacet = facets.find(f => f.code === 'brand');
     if (brandFacet?.values) {
-      console.log('Brand facet values:', brandFacet.values); // Debug için
+      console.log('Brand facet values:', brandFacet.values);
       this.brands = brandFacet.values
-        .filter((value: any) => value.code && value.name)
-        .map((value: any) => ({
-          id: String(value.code), // Code'u string'e çevir
-          name: String(value.name),
+        .filter((value: ApiFacetValue) => value.code && value.name)
+        .map((value: ApiFacetValue) => ({
+          id: value.code, // Brand için code değeri direkt kullanılıyor
+          name: value.name,
           productCount: Number(value.count) || 0
         }));
-      console.log('Processed brands:', this.brands); // Debug için
+      console.log('Processed brands:', this.brands);
     }
   }
-  private mapRgbToColorId(rgbCode: string): string {
-    const rgbMap: { [key: string]: string } = {
-      '0;0;255': 'mavi',
-      '255;0;0': 'kirmizi',
-      '0;128;0': 'yesil',
-      '255;255;0': 'sari',
-      '255;0;255': 'pembe',
-      '128;0;128': 'mor',
-      '255;165;0': 'turuncu',
-      '165;42;42': 'kahverengi',
-      '128;128;128': 'gri',
-      '0;0;0': 'siyah',
-      '255;255;255': 'beyaz',
-      '194;178;128': 'krem'
-    };
-    return rgbMap[rgbCode] || rgbCode;
-  }
 
-  private mapGenderApiToInternal(apiCode: string): string {
-    const genderMap: { [key: string]: string } = {
-      'Erkek Bebek': 'erkek',
-      'Kız Bebek': 'kız',
-      'Unisex': 'unisex',
-      'Kadın': 'unisex'
-    };
-    return genderMap[apiCode] || 'unisex';
+  // FİX: Helper methods for code normalization
+  private normalizeSizeCode(apiCode: string): string {
+    // API code'unu UI ID'sine çevir (backward compatibility için)
+    return apiCode.toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 
   private mapGenderCode(apiCode: string): string {
@@ -293,7 +261,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       'Erkek Bebek': 'erkek',
       'Kız Bebek': 'kız',
       'Unisex': 'unisex',
-      'Kadın': 'unisex' // Anne ürünleri için
+      'Kadın': 'unisex'
     };
     return genderMap[apiCode] || 'unisex';
   }
@@ -344,7 +312,9 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     return colorHexMap[colorName] || '#cccccc';
   }
 
-  private extractRatingValue(ratingName: string): number {
+  // FİX: Rating value extraction - null safe
+  extractRatingValue(ratingName: string | undefined): number {
+    if (!ratingName) return 0;
     const match = ratingName.match(/(\d+)\*/);
     return match ? parseInt(match[1]) : 0;
   }
@@ -363,20 +333,20 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Getter methods for templates
-  get sizes(): FilterOption[] {
+  // Getter methods for templates - Return enhanced types
+  get sizes(): FilterOptionWithCode[] {
     return this.availableSizes.length > 0 ? this.availableSizes : this.defaultSizes;
   }
 
-  get genders(): FilterOption[] {
+  get genders(): FilterOptionWithCode[] {
     return this.availableGenders.length > 0 ? this.availableGenders : this.defaultGenders;
   }
 
-  get colors(): ColorOption[] {
+  get colors(): ColorOptionWithCode[] {
     return this.availableColors.length > 0 ? this.availableColors : this.defaultColors;
   }
 
-  get ratingOptions(): FilterOption[] {
+  get ratingOptions(): FilterOptionWithCode[] {
     return this.availableRatings.length > 0 ? this.availableRatings : this.defaultRatingOptions;
   }
 
@@ -388,8 +358,9 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     );
   }
 
+  // FİX: isSelected metodu - code değerini kontrol et
   isSelected(filterType: keyof ProductFilters, value: string | number): boolean {
-    if (!value) return false; // undefined/null değerler için false döndür
+    if (!value) return false;
     
     const filterValue = this.currentFilters[filterType];
     if (Array.isArray(filterValue)) {
@@ -405,7 +376,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   }
 
   onBrandChange(brandId: string, event: Event) {
-    if (!brandId) return; // Type safety check
+    if (!brandId) return;
     
     const checked = (event.target as HTMLInputElement).checked;
     const currentBrands = this.currentFilters.brandIds || [];
@@ -417,72 +388,90 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       newBrands = currentBrands.filter(id => id !== brandId);
     }
 
+    console.log('Brand change:', { brandId, checked, newBrands });
+
     this.store.dispatch(ProductActions.setFilters({
       filters: { brandIds: newBrands.length > 0 ? newBrands : undefined }
     }));
   }
 
-  onSizeChange(sizeId: string, event: Event) {
-    if (!sizeId) return; // Type safety check
+  // FİX: onSizeChange - API CODE değerini kullan
+  onSizeChange(sizeCode: string, event: Event) {
+    if (!sizeCode) return;
     
     const checked = (event.target as HTMLInputElement).checked;
     const currentSizes = this.currentFilters.sizes || [];
     
     let newSizes: string[];
     if (checked) {
-      newSizes = [...currentSizes, sizeId];
+      newSizes = [...currentSizes, sizeCode];
     } else {
-      newSizes = currentSizes.filter(id => id !== sizeId);
+      newSizes = currentSizes.filter(code => code !== sizeCode);
     }
+
+    console.log('Size change with API CODE:', { 
+      sizeCode, 
+      checked, 
+      currentSizes, 
+      newSizes 
+    });
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { sizes: newSizes.length > 0 ? newSizes : undefined }
     }));
   }
 
-  // Cinsiyet seçimi - CODE tabanlı filtreleme
-  onGenderChange(genderId: string, event: Event) {
-    if (!genderId) return; // Type safety check
+  // FİX: onGenderChange - API CODE değerini kullan
+  onGenderChange(genderCode: string, event: Event) {
+    if (!genderCode) return;
     
     const checked = (event.target as HTMLInputElement).checked;
     const currentGenders = this.currentFilters.genders || [];
     
     let newGenders: string[];
     if (checked) {
-      newGenders = [...currentGenders, genderId];
+      newGenders = [...currentGenders, genderCode];
     } else {
-      newGenders = currentGenders.filter(id => id !== genderId);
+      newGenders = currentGenders.filter(code => code !== genderCode);
     }
+
+    console.log('Gender change with API CODE:', { 
+      genderCode, 
+      checked, 
+      currentGenders, 
+      newGenders 
+    });
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { genders: newGenders.length > 0 ? newGenders : undefined }
     }));
   }
 
-  // Renk seçimi - CODE tabanlı filtreleme  
+  // FİX: onColorChange - API CODE değerini kullan
   onColorChange(colorCode: string) {
+    if (!colorCode) return;
+    
     const currentColors = this.currentFilters.colors || [];
-    
-    console.log('Color changed:', { colorCode, currentColors });
-    
-    // API'den gelen renk kodlarını (RGB) internal kodlara çevir
-    const internalColorCode = this.mapRgbToColorId(colorCode);
-    const isSelected = currentColors.includes(internalColorCode);
+    const isSelected = currentColors.includes(colorCode);
     
     let newColors: string[];
     if (isSelected) {
-      newColors = currentColors.filter(code => code !== internalColorCode);
+      newColors = currentColors.filter(code => code !== colorCode);
     } else {
-      newColors = [...currentColors, internalColorCode];
+      newColors = [...currentColors, colorCode];
     }
 
-    console.log('New colors array (with internal codes):', newColors);
+    console.log('Color change with API CODE:', { 
+      colorCode, 
+      isSelected, 
+      currentColors, 
+      newColors 
+    });
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { colors: newColors.length > 0 ? newColors : undefined }
     }));
   }
-
 
   onPriceChange() {
     if (this.minPrice !== null || this.maxPrice !== null) {
@@ -507,16 +496,31 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     this.onPriceChange();
   }
 
-  onRatingChange(rating: number, event: Event) {
+  // FİX: onRatingChange - API CODE değerini kullan
+  onRatingChange(ratingCode: string | number, event: Event) {
+    if (!ratingCode) return;
+    
     const checked = (event.target as HTMLInputElement).checked;
     const currentRatings = this.currentFilters.ratings || [];
     
+    // String code'u number'a çevir (rating değeri için)
+    const ratingValue = typeof ratingCode === 'string' ? 
+      this.extractRatingValue(ratingCode) : ratingCode;
+    
     let newRatings: number[];
     if (checked) {
-      newRatings = [...currentRatings, rating];
+      newRatings = [...currentRatings, ratingValue];
     } else {
-      newRatings = currentRatings.filter(r => r !== rating);
+      newRatings = currentRatings.filter(r => r !== ratingValue);
     }
+
+    console.log('Rating change with API CODE:', { 
+      ratingCode, 
+      ratingValue, 
+      checked, 
+      currentRatings, 
+      newRatings 
+    });
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { ratings: newRatings.length > 0 ? newRatings : undefined }

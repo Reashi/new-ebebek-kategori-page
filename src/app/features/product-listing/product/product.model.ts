@@ -75,6 +75,7 @@ export interface Category {
 }
 
 export interface FilterOption {
+code: any;
 value: any;
   id: string;
   name: string;
@@ -83,6 +84,7 @@ value: any;
 }
 
 export interface ColorOption {
+code: string|number;
   id: string;
   name: string;
   hexCode: string;
