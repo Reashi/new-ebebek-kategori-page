@@ -27,8 +27,27 @@
         </label>
       </div>
     </div>
+    <!-- Beden Filtresi - CODE tabanlı -->
+    <div class="filter-section">
+      <h4 class="filter-title">Beden</h4>
+      <div class="filter-options">
+        <label 
+          *ngFor="let size of sizes" 
+          class="checkbox-option">
+          <input 
+            type="checkbox"
+            [value]="size.id"
+            [checked]="isSelected('sizes', size.id)"
+            (change)="onSizeChange(size.id, $event)">
+          <span class="checkbox-label">
+            {{ size.name }}
+            <span class="count" *ngIf="size.count">({{ size.count }})</span>
+          </span>
+        </label>
+      </div>
+    </div>
 
-    <!-- Markalar -->
+    <!-- Markalar - CODE tabanlı -->
     <div class="filter-section">
       <h4 class="filter-title">Markalar</h4>
       <div class="search-box">
@@ -55,27 +74,7 @@
       </div>
     </div>
 
-    <!-- Beden -->
-    <div class="filter-section">
-      <h4 class="filter-title">Beden</h4>
-      <div class="filter-options">
-        <label 
-          *ngFor="let size of sizes" 
-          class="checkbox-option">
-          <input 
-            type="checkbox"
-            [value]="size.id"
-            [checked]="isSelected('sizes', size.id)"
-            (change)="onSizeChange(size.id, $event)">
-          <span class="checkbox-label">
-            {{ size.name }}
-            <span class="count" *ngIf="size.count">({{ size.count }})</span>
-          </span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Cinsiyet -->
+    <!-- Cinsiyet - API CODE tabanlı -->
     <div class="filter-section">
       <h4 class="filter-title">Cinsiyet</h4>
       <div class="filter-options">
@@ -84,9 +83,9 @@
           class="checkbox-option">
           <input 
             type="checkbox"
-            [value]="gender.id"
-            [checked]="isSelected('genders', gender.id)"
-            (change)="onGenderChange(gender.id, $event)">
+            [value]="gender.apiCode"
+            [checked]="isSelected('genders', gender.apiCode)"
+            (change)="onGenderChange(gender.apiCode, $event)">
           <span class="checkbox-label">
             {{ gender.name }}
             <span class="count" *ngIf="gender.count">({{ gender.count }})</span>
@@ -95,15 +94,15 @@
       </div>
     </div>
 
-    <!-- Renk -->
+    <!-- Renk - RGB CODE tabanlı -->
     <div class="filter-section">
       <h4 class="filter-title">Renk</h4>
       <div class="color-grid">
         <div 
           *ngFor="let color of colors; let i = index" 
           class="color-option"
-          [class.selected]="isSelected('colors', color.id)"
-          (click)="onColorChange(color.id)"
+          [class.selected]="isSelected('colors', color.rgbCode)"
+          (click)="onColorChange(color.rgbCode)"
           [title]="color.name">
           <div 
             class="color-circle"
@@ -113,7 +112,6 @@
         </div>
       </div>
     </div>
-
     <!-- Fiyat Aralığı -->
     <div class="filter-section">
       <h4 class="filter-title">Fiyat Aralığı</h4>

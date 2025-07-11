@@ -185,7 +185,7 @@ export class ProductService {
     
     let queryParts: string[] = [];
 
-    // Sıralama
+    // Sıralama (her zaman ilk sırada)
     const sort = this.mapSortBy(sortBy);
     queryParts.push(`:${sort}`);
 
@@ -197,7 +197,7 @@ export class ProductService {
       return basicQuery;
     }
 
-    // Kategori filtresi
+    // KATEGORI FİLTRESİ
     if (filters.categoryId) {
       console.log('Adding category filter:', filters.categoryId);
       const ebebekCategoryCode = this.categoryMapping[filters.categoryId];
@@ -206,59 +206,78 @@ export class ProductService {
       }
     }
 
-    // Marka filtresi - DÜZELTİLDİ
+    // MARKA FİLTRESİ - E-BEBEK API FORMAT: brand:id1:brand:id2:brand:id3
     if (filters.brandIds && Array.isArray(filters.brandIds) && filters.brandIds.length > 0) {
       console.log('Adding brand filter:', filters.brandIds);
       
-      // Tek marka için
-      if (filters.brandIds.length === 1) {
-        queryParts.push(`brand:${filters.brandIds[0]}`);
-      } else {
-        // Birden fazla marka için OR operatörü kullan
-        const brandQueries = filters.brandIds
-          .filter(brandId => brandId && brandId.trim()) // Boş değerleri filtrele
-          .map(brandId => `brand:${brandId.trim()}`);
+      const validBrandIds = filters.brandIds
+        .filter(brandId => brandId && brandId.trim())
+        .map(brandId => brandId.trim());
+      
+      if (validBrandIds.length > 0) {
+        // Her marka için ayrı brand: ekle
+        validBrandIds.forEach(brandId => {
+          queryParts.push(`brand:${brandId}`);
+        });
         
-        if (brandQueries.length > 0) {
-          queryParts.push(`(${brandQueries.join(' OR ')})`);
-        }
+        console.log('Brand query parts added:', validBrandIds.length);
+        console.log('Brand IDs used:', validBrandIds);
       }
     }
 
-    // Arama terimi
-    if (filters.searchTerm && filters.searchTerm.trim()) {
-      console.log('Adding search term:', filters.searchTerm);
-      queryParts.push(`text:${encodeURIComponent(filters.searchTerm.trim())}`);
+    // BEDEN FİLTRESİ - E-BEBEK API FORMAT: size:"1,5 Yaş":size:"2-3 Yaş"
+    if (filters.sizes && Array.isArray(filters.sizes) && filters.sizes.length > 0) {
+      console.log('Adding size filter:', filters.sizes);
+      
+      const validSizes = filters.sizes
+        .filter(size => size && size.trim())
+        .map(size => size.trim());
+      
+      if (validSizes.length > 0) {
+        // Her beden için ayrı size: ekle - API'den gelen CODE değerlerini direkt kullan
+        validSizes.forEach(sizeCode => {
+          // CODE değerleri zaten API formatında olduğu için formatSizeValue'ya gerek yok
+          // Sadece boşluk içerenler için tırnak ekle
+          const formattedSize = sizeCode.includes(' ') || sizeCode.includes(',') 
+            ? `"${sizeCode}"` 
+            : sizeCode;
+          queryParts.push(`size:${formattedSize}`);
+        });
+        
+        console.log('Size query parts added:', validSizes.length);
+        console.log('Size codes used (API format):', validSizes);
+      }
     }
 
-    // Fiyat aralığı
-    if (filters.priceRange && filters.priceRange.min !== undefined && filters.priceRange.max !== undefined) {
-      console.log('Adding price range:', filters.priceRange);
-      queryParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
-    }
-
-    // Cinsiyet filtresi
+    // CİNSİYET FİLTRESİ - E-BEBEK API FORMAT: gender:"Erkek Bebek":gender:"Kız Bebek"
     if (filters.genders && Array.isArray(filters.genders) && filters.genders.length > 0) {
       console.log('Adding gender filter:', filters.genders);
+      
       const genderMapping: { [key: string]: string } = {
         'erkek': 'Erkek Bebek',
         'kız': 'Kız Bebek',
         'unisex': 'Unisex'
       };
       
-      const genderQueries = filters.genders
+      const validGenders = filters.genders
         .map(gender => genderMapping[gender])
-        .filter(Boolean)
-        .map(apiGender => `gender:"${apiGender}"`);
+        .filter(Boolean);
       
-      if (genderQueries.length > 0) {
-        queryParts.push(`(${genderQueries.join(' OR ')})`);
+      if (validGenders.length > 0) {
+        // Her cinsiyet için ayrı gender: ekle
+        validGenders.forEach(gender => {
+          queryParts.push(`gender:"${gender}"`);
+        });
+        
+        console.log('Gender query parts added:', validGenders.length);
+        console.log('Gender values used:', validGenders);
       }
     }
 
-    // Renk filtresi
+    // RENK FİLTRESİ - E-BEBEK API FORMAT: color:"0;0;255":color:"255;0;0"
     if (filters.colors && Array.isArray(filters.colors) && filters.colors.length > 0) {
       console.log('Adding color filter:', filters.colors);
+      
       const colorMapping: { [key: string]: string } = {
         'mavi': '0;0;255',
         'kirmizi': '255;0;0',
@@ -274,46 +293,59 @@ export class ProductService {
         'krem': '194;178;128'
       };
       
-      const colorQueries = filters.colors
+      const validColors = filters.colors
         .map(color => colorMapping[color])
-        .filter(Boolean)
-        .map(apiColor => `color:"${apiColor}"`);
+        .filter(Boolean);
       
-      if (colorQueries.length > 0) {
-        queryParts.push(`(${colorQueries.join(' OR ')})`);
+      if (validColors.length > 0) {
+        // Her renk için ayrı color: ekle
+        validColors.forEach(color => {
+          queryParts.push(`color:"${color}"`);
+        });
+        
+        console.log('Color query parts added:', validColors.length);
+        console.log('Color values used:', validColors);
       }
     }
 
-    // Beden filtresi
-    if (filters.sizes && Array.isArray(filters.sizes) && filters.sizes.length > 0) {
-      console.log('Adding size filter:', filters.sizes);
-      const sizeQueries = filters.sizes
-        .filter(size => size && size.trim())
-        .map(size => `size:"${size.trim()}"`);
-      
-      if (sizeQueries.length > 0) {
-        queryParts.push(`(${sizeQueries.join(' OR ')})`);
-      }
-    }
-
-    // Değerlendirme filtresi
+    // DEĞERLENDİRME FİLTRESİ - E-BEBEK API FORMAT: review_rating_star:"4* ve üzeri"
     if (filters.ratings && Array.isArray(filters.ratings) && filters.ratings.length > 0) {
       console.log('Adding rating filter:', filters.ratings);
-      const ratingQueries = filters.ratings
-        .map(rating => `review_rating_star:"${rating}* ve üzeri"`);
       
-      if (ratingQueries.length > 0) {
-        queryParts.push(`(${ratingQueries.join(' OR ')})`);
+      const validRatings = filters.ratings
+        .filter(rating => rating && rating > 0)
+        .map(rating => `${rating}* ve üzeri`);
+      
+      if (validRatings.length > 0) {
+        // Her rating için ayrı review_rating_star: ekle
+        validRatings.forEach(rating => {
+          queryParts.push(`review_rating_star:"${rating}"`);
+        });
+        
+        console.log('Rating query parts added:', validRatings.length);
+        console.log('Rating values used:', validRatings);
       }
     }
 
-    // Stok durumu
+    // ARAMA TERİMİ
+    if (filters.searchTerm && filters.searchTerm.trim()) {
+      console.log('Adding search term:', filters.searchTerm);
+      queryParts.push(`text:${encodeURIComponent(filters.searchTerm.trim())}`);
+    }
+
+    // FİYAT ARALIĞI - E-BEBEK API FORMAT: price:[min TO max]
+    if (filters.priceRange && filters.priceRange.min !== undefined && filters.priceRange.max !== undefined) {
+      console.log('Adding price range:', filters.priceRange);
+      queryParts.push(`price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`);
+    }
+
+    // STOK DURUMU
     if (filters.inStockOnly === true) {
       console.log('Adding stock filter: inStock only');
       queryParts.push('stockLevelStatus:inStock');
     }
 
-    // İndirimli ürünler
+    // İNDİRİMLİ ÜRÜNLER
     if (filters.onSaleOnly === true) {
       console.log('Adding sale filter: on sale only');
       queryParts.push('discountRate:[1 TO *]');
@@ -324,20 +356,29 @@ export class ProductService {
     console.log('Query parts:', queryParts);
 
     return finalQuery;
-  }
+    }
+
+  // Yardımcı fonksiyon - Beden değerlerini formatla
+  private formatSizeValue(size: string): string {
+    // Eğer boşluk içeriyorsa tırnak içine al
+    if (size.includes(' ') || size.includes('-')) {
+      return `"${size}"`;
+    }
+    return size;
+    }
 
   private mapSortBy(sortBy?: string): string {
-    const sortMap: { [key: string]: string } = {
-      'name': 'name-asc',
-      'price-asc': 'price-asc',
-      'price-desc': 'price-desc',
-      'rating': 'rating-desc',
-      'newest': 'creationtime-desc',
-      'popularity': 'relevance'
-    };
+      const sortMap: { [key: string]: string } = {
+        'name': 'name-asc',
+        'price-asc': 'price-asc',
+        'price-desc': 'price-desc',
+        'rating': 'rating-desc',
+        'newest': 'creationtime-desc',
+        'popularity': 'relevance'
+      };
 
-    return sortMap[sortBy || 'relevance'] || 'relevance';
-  }
+      return sortMap[sortBy || 'relevance'] || 'relevance';
+    }
 
   private getEnhancedFieldsParameter(): string {
     return [
@@ -353,7 +394,7 @@ export class ProductService {
       ',facets(FULL),breadcrumbs,pagination(DEFAULT),sorts(DEFAULT)',
       ',freeTextSearch,currentQuery,keywordRedirectUrl'
     ].join('');
-  }
+    }
 
   private getHeaders(): HttpHeaders {
     const headers: { [key: string]: string } = {

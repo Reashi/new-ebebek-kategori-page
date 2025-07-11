@@ -74,37 +74,32 @@ export interface Category {
   count?: number;
 }
 
-export interface Brand {
-  id: string;
-  name: string;
-  productCount?: number;
-}
-
 export interface FilterOption {
   id: string;
   name: string;
   count?: number;
+  apiCode?: string; // API'den gelen original code
 }
 
 export interface ColorOption {
   id: string;
   name: string;
   hexCode: string;
-  rgbCode?: string;
+  rgbCode?: string; // API'den gelen RGB code
   count?: number;
 }
 
 export interface SizeOption {
-  id: string;
-  name: string;
+  id: string; // API code (örn: "1,5 Yaş")
+  name: string; // Display name (örn: "1.5 Yaş")
   category?: string;
   count?: number;
 }
 
 export interface GenderOption {
-  id: string;
-  name: string;
-  apiCode?: string;
+  id: string; // Internal code (örn: "erkek")
+  name: string; // Display name (örn: "Erkek Bebek")
+  apiCode?: string; // API code (örn: "Erkek Bebek")
   count?: number;
 }
 
@@ -114,6 +109,13 @@ export interface RatingOption {
   value: number;
   count?: number;
   label?: string;
+}
+
+// Brand interface'i güncelleme
+export interface Brand {
+  id: string; // API code (sayısal ID string olarak)
+  name: string; // Display name
+  productCount?: number;
 }
 
 // Facets için tip tanımları
