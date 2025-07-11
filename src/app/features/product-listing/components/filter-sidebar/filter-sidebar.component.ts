@@ -369,6 +369,31 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     return filterValue === value;
   }
 
+  // Helper methods for template - NULL SAFE
+  isColorSelected(color: ColorOptionWithCode): boolean {
+    const colorCode = color.code || color.id;
+    return colorCode ? this.isSelected('colors', colorCode) : false;
+  }
+
+  onColorClick(color: ColorOptionWithCode): void {
+    const colorCode = color.code || color.id;
+    if (colorCode) {
+      this.onColorChange(colorCode);
+    }
+  }
+
+  isRatingSelected(rating: FilterOptionWithCode): boolean {
+    const ratingCode = rating.code || rating.value;
+    return ratingCode ? this.isSelected('ratings', ratingCode) : false;
+  }
+
+  onRatingClick(rating: FilterOptionWithCode, event: Event): void {
+    const ratingCode = rating.code || rating.value;
+    if (ratingCode) {
+      this.onRatingChange(ratingCode, event);
+    }
+  }
+
   onCategoryChange() {
     this.store.dispatch(ProductActions.setFilters({
       filters: { categoryId: this.selectedCategoryId || undefined }

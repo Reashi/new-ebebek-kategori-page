@@ -102,8 +102,8 @@
         <div 
           *ngFor="let color of colors; let i = index" 
           class="color-option"
-          [class.selected]="isSelected('colors', color.code || color.id || '')"
-          (click)="(color.code || color.id) && onColorChange(color.code || color.id)"
+          [class.selected]="isColorSelected(color)"
+          (click)="onColorClick(color)"
           [title]="color.name">
           <div 
             class="color-circle"
@@ -154,13 +154,13 @@
           <input 
             type="checkbox"
             [value]="rating.code || rating.value"
-            [checked]="isSelected('ratings', rating.code || rating.value || '')"
-            (change)="(rating.code || rating.value) && onRatingChange(rating.code || rating.value, $event)">
+            [checked]="isRatingSelected(rating)"
+            (change)="onRatingClick(rating, $event)">
           <span class="checkbox-label">
             <div class="stars">
-              <span *ngFor="let star of getStars(rating.value || (rating.name ? extractRatingValue(rating.name) : 0))" 
+              <span *ngFor="let star of getStars(rating.value || extractRatingValue(rating.name))" 
                     class="star"
-                    [class.filled]="star <= (rating.value || (rating.name ? extractRatingValue(rating.name) : 0))">★</span>
+                    [class.filled]="star <= (rating.value || extractRatingValue(rating.name))">★</span>
             </div>
             {{ rating.name || (rating.value ? rating.value + ' ve üzeri' : '') }}
             <span class="count" *ngIf="rating.count">({{ rating.count }})</span>
