@@ -1,4 +1,4 @@
-// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts - Fixed API Code Usage
+// src/app/features/product-listing/components/filter-sidebar/filter-sidebar.component.ts - FIXED API Code Usage
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -11,18 +11,18 @@ import { ProductFilters, Category, Brand } from '../../product/product.model';
 import * as ProductActions from '../../product/product.actions';
 import * as ProductSelectors from '../../product/product.selectors';
 
-// FİX: Enhanced API Facet interfaces
+// API Facet interfaces - ENHANCED
 interface ApiFacetValue {
-  code: string;    // API'nin kullandığı değer (örn: "1,5 Yaş")
-  name: string;    // Kullanıcıya gösterilen değer (örn: "1.5 Yaş")
+  code: string;    // API'nin kullandığı değer (örn: "1,5 Yaş") - BU DEĞERİ KULLANACAğIZ
+  name: string;    // Kullanıcıya gösterilen değer (örn: "1.5 Yaş") 
   count: number;
   selected?: boolean;
 }
 
 interface FilterOptionWithCode {
   id?: string;      // Fallback için
-  code?: string;    // API code - öncelik
-  name: string;     // Display name
+  code?: string;    // API code - ÖNCELIK - Bu değer API'ye gönderilecek
+  name: string;     // Display name - Bu değer UI'da gösterilecek
   count?: number;
   value?: any;      // Eski interface uyumluluğu için
 }
@@ -71,13 +71,13 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     { id: 'mam', name: 'MAM', productCount: 11 }
   ];
 
-  // API'den gelecek veriler - Enhanced with code property
+  // API'den gelecek veriler - ENHANCED with proper code handling
   availableSizes: FilterOptionWithCode[] = [];
   availableGenders: FilterOptionWithCode[] = [];
   availableColors: ColorOptionWithCode[] = [];
   availableRatings: FilterOptionWithCode[] = [];
 
-  // Fallback veriler - Enhanced with code property
+  // Fallback veriler - FIXED: code değerleri API formatına uygun
   defaultSizes: FilterOptionWithCode[] = [
     { id: '0-3-ay', code: '0-3 Ay', name: '0-3 Ay', count: 25 },
     { id: '3-6-ay', code: '3-6 Ay', name: '3-6 Ay', count: 30 },
@@ -164,90 +164,115 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // FİX: API'den gelen facets verisini işleme - CODE odaklı
+  // FIXED: API'den gelen facets verisini işleme - CODE odaklı
   updateFilterOptionsFromApi(facets: any[]) {
     if (!facets) return;
 
-    console.log('Facets received for processing:', facets);
+    console.log('[FILTER SIDEBAR] Facets received for processing:', facets);
 
-    // Size facet'i işle - CODE değerini kullan
+    // Size facet'i işle - CODE DEĞERİNİ AYNEN KULLAN
     const sizeFacet = facets.find(f => f.code === 'size');
     if (sizeFacet?.values) {
-      console.log('Size facet values:', sizeFacet.values);
+      console.log('[FILTER SIDEBAR] Size facet values:', sizeFacet.values);
       this.availableSizes = sizeFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
-        .map((value: ApiFacetValue) => ({
-          id: this.normalizeSizeCode(value.code), // Backward compatibility
-          code: value.code, // API'nin beklediği değer - ÖNEMLİ!
-          name: value.name, // UI'da gösterilen değer
-          count: Number(value.count) || 0
-        }));
-      console.log('Processed sizes:', this.availableSizes);
+        .map((value: ApiFacetValue) => {
+          console.log(`[SIZE MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          
+          // CRITICAL FIX: API code'u tamamen temizle ve normalize et
+          let cleanCode = value.code;
+          
+          // Eğer API'den gelen code'da URL encoding varsa temizle
+          if (cleanCode.includes('%') || cleanCode.includes('+')) {
+            cleanCode = decodeURIComponent(cleanCode.replace(/\+/g, ' '));
+            console.log(`[SIZE MAPPING] Decoded API Code: "${cleanCode}"`);
+          }
+          
+          return {
+            id: this.normalizeSizeCode(cleanCode), // Backward compatibility
+            code: cleanCode, // Temizlenmiş API code
+            name: value.name, // UI'da gösterilen değer
+            count: Number(value.count) || 0
+          };
+        });
+      console.log('[FILTER SIDEBAR] Processed sizes with CLEANED API codes:', this.availableSizes);
     }
 
-    // Gender facet'i işle - CODE değerini kullan
+    // Gender facet'i işle - CODE DEĞERİNİ AYNEN KULLAN
     const genderFacet = facets.find(f => f.code === 'gender');
     if (genderFacet?.values) {
-      console.log('Gender facet values:', genderFacet.values);
+      console.log('[FILTER SIDEBAR] Gender facet values:', genderFacet.values);
       this.availableGenders = genderFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
-        .map((value: ApiFacetValue) => ({
-          id: this.mapGenderCode(value.code), // Backward compatibility
-          code: value.code, // API'nin beklediği değer - ÖNEMLİ!
-          name: value.name, // UI'da gösterilen değer
-          count: Number(value.count) || 0
-        }));
-      console.log('Processed genders:', this.availableGenders);
+        .map((value: ApiFacetValue) => {
+          console.log(`[GENDER MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          return {
+            id: this.mapGenderCode(value.code), // Backward compatibility
+            code: value.code, // API'nin tam olarak beklediği değer - AYNEN KULLAN!
+            name: value.name, // UI'da gösterilen değer
+            count: Number(value.count) || 0
+          };
+        });
+      console.log('[FILTER SIDEBAR] Processed genders with EXACT API codes:', this.availableGenders);
     }
 
-    // Color facet'i işle - CODE değerini kullan
+    // Color facet'i işle - CODE DEĞERİNİ AYNEN KULLAN
     const colorFacet = facets.find(f => f.code === 'color');
     if (colorFacet?.values) {
-      console.log('Color facet values:', colorFacet.values);
+      console.log('[FILTER SIDEBAR] Color facet values:', colorFacet.values);
       this.availableColors = colorFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
-        .map((value: ApiFacetValue) => ({
-          id: this.mapColorCode(value.code), // Backward compatibility
-          code: value.code, // API'nin beklediği değer (RGB format) - ÖNEMLİ!
-          name: value.name, // UI'da gösterilen değer
-          hexCode: this.rgbToHex(value.code) || this.getDefaultColorHex(value.name)
-        }));
-      console.log('Processed colors:', this.availableColors);
+        .map((value: ApiFacetValue) => {
+          console.log(`[COLOR MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          return {
+            id: this.mapColorCode(value.code), // Backward compatibility
+            code: value.code, // API'nin tam olarak beklediği değer (RGB format) - AYNEN KULLAN!
+            name: value.name, // UI'da gösterilen değer
+            hexCode: this.rgbToHex(value.code) || this.getDefaultColorHex(value.name)
+          };
+        });
+      console.log('[FILTER SIDEBAR] Processed colors with EXACT API codes:', this.availableColors);
     }
 
-    // Rating facet'i işle - CODE değerini kullan
+    // Rating facet'i işle - CODE DEĞERİNİ AYNEN KULLAN
     const ratingFacet = facets.find(f => f.code === 'review_rating_star');
     if (ratingFacet?.values) {
-      console.log('Rating facet values:', ratingFacet.values);
+      console.log('[FILTER SIDEBAR] Rating facet values:', ratingFacet.values);
       this.availableRatings = ratingFacet.values
         .filter((value: ApiFacetValue) => value.name && !value.name.includes('Puansız'))
-        .map((value: ApiFacetValue) => ({
-          id: String(value.code || this.extractRatingValue(value.name)), // Backward compatibility
-          code: value.code || value.name, // API'nin beklediği değer - ÖNEMLİ!
-          name: value.name, // UI'da gösterilen değer
-          count: Number(value.count) || 0,
-          value: this.extractRatingValue(value.name)
-        }))
+        .map((value: ApiFacetValue) => {
+          console.log(`[RATING MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          return {
+            id: String(value.code || this.extractRatingValue(value.name)), // Backward compatibility
+            code: value.code || value.name, // API'nin tam olarak beklediği değer - AYNEN KULLAN!
+            name: value.name, // UI'da gösterilen değer
+            count: Number(value.count) || 0,
+            value: this.extractRatingValue(value.name)
+          };
+        })
         .filter((item: FilterOptionWithCode) => (item.value || 0) > 0);
-      console.log('Processed ratings:', this.availableRatings);
+      console.log('[FILTER SIDEBAR] Processed ratings with EXACT API codes:', this.availableRatings);
     }
 
-    // Brand facet'i işle - CODE değerini kullan
+    // Brand facet'i işle - CODE DEĞERİNİ AYNEN KULLAN
     const brandFacet = facets.find(f => f.code === 'brand');
     if (brandFacet?.values) {
-      console.log('Brand facet values:', brandFacet.values);
+      console.log('[FILTER SIDEBAR] Brand facet values:', brandFacet.values);
       this.brands = brandFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
-        .map((value: ApiFacetValue) => ({
-          id: value.code, // Brand için code değeri direkt kullanılıyor
-          name: value.name,
-          productCount: Number(value.count) || 0
-        }));
-      console.log('Processed brands:', this.brands);
+        .map((value: ApiFacetValue) => {
+          console.log(`[BRAND MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          return {
+            id: value.code, // Brand için code değeri direkt kullanılıyor
+            name: value.name,
+            productCount: Number(value.count) || 0
+          };
+        });
+      console.log('[FILTER SIDEBAR] Processed brands with EXACT API codes:', this.brands);
     }
   }
 
-  // FİX: Helper methods for code normalization
+  // Helper methods for code normalization
   private normalizeSizeCode(apiCode: string): string {
     // API code'unu UI ID'sine çevir (backward compatibility için)
     return apiCode.toLowerCase()
@@ -312,7 +337,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     return colorHexMap[colorName] || '#cccccc';
   }
 
-  // FİX: Rating value extraction - null safe
+  // Rating value extraction - null safe
   extractRatingValue(ratingName: string | undefined): number {
     if (!ratingName) return 0;
     const match = ratingName.match(/(\d+)\*/);
@@ -358,18 +383,19 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     );
   }
 
-  // FİX: isSelected metodu - code değerini kontrol et
+  // FIXED: isSelected metodu - EXACT API code değerini kontrol et
   isSelected(filterType: keyof ProductFilters, value: string | number): boolean {
     if (!value) return false;
     
     const filterValue = this.currentFilters[filterType];
     if (Array.isArray(filterValue)) {
+      // State'de API code değerleri tutulduğu için, direkt karşılaştır
       return filterValue.includes(value as never);
     }
     return filterValue === value;
   }
 
-  // Helper methods for template - NULL SAFE
+  // TEMPLATE HELPER METHODS - NULL SAFE ve API CODE odaklı
   isColorSelected(color: ColorOptionWithCode): boolean {
     const colorCode = color.code || color.id;
     return colorCode ? this.isSelected('colors', colorCode) : false;
@@ -394,6 +420,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     }
   }
 
+  // EVENT HANDLERS - FIXED: API CODE değerlerini kullan
   onCategoryChange() {
     this.store.dispatch(ProductActions.setFilters({
       filters: { categoryId: this.selectedCategoryId || undefined }
@@ -413,16 +440,19 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       newBrands = currentBrands.filter(id => id !== brandId);
     }
 
-    console.log('Brand change:', { brandId, checked, newBrands });
+    console.log('[FILTER SIDEBAR] Brand change:', { brandId, checked, newBrands });
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { brandIds: newBrands.length > 0 ? newBrands : undefined }
     }));
   }
 
-  // FİX: onSizeChange - API CODE değerini kullan
+  // CRITICAL FIX: onSizeChange - API CODE değerini AYNEN kullan
   onSizeChange(sizeCode: string, event: Event) {
-    if (!sizeCode) return;
+    if (!sizeCode) {
+      console.warn('onSizeChange called with empty sizeCode');
+      return;
+    }
     
     const checked = (event.target as HTMLInputElement).checked;
     const currentSizes = this.currentFilters.sizes || [];
@@ -435,18 +465,23 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     }
 
     console.log('Size change with API CODE:', { 
-      sizeCode, 
+      sizeCode: `"${sizeCode}"`, // Tırnak içinde göster
+      sizeCodeType: typeof sizeCode,
+      sizeCodeLength: sizeCode.length,
       checked, 
       currentSizes, 
       newSizes 
     });
+
+    // Gönderilen değeri de logla
+    console.log('Dispatching size filter with values:', newSizes);
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { sizes: newSizes.length > 0 ? newSizes : undefined }
     }));
   }
 
-  // FİX: onGenderChange - API CODE değerini kullan
+  // CRITICAL FIX: onGenderChange - API CODE değerini AYNEN kullan
   onGenderChange(genderCode: string, event: Event) {
     if (!genderCode) return;
     
@@ -460,19 +495,18 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       newGenders = currentGenders.filter(code => code !== genderCode);
     }
 
-    console.log('Gender change with API CODE:', { 
-      genderCode, 
-      checked, 
-      currentGenders, 
-      newGenders 
-    });
+    console.log('[FILTER SIDEBAR] Gender change with EXACT API CODE:');
+    console.log('  Selected gender CODE (what API expects):', `"${genderCode}"`);
+    console.log('  Checked:', checked);
+    console.log('  Current genders in state:', currentGenders);
+    console.log('  New genders array for API:', newGenders);
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { genders: newGenders.length > 0 ? newGenders : undefined }
     }));
   }
 
-  // FİX: onColorChange - API CODE değerini kullan
+  // CRITICAL FIX: onColorChange - API CODE değerini AYNEN kullan
   onColorChange(colorCode: string) {
     if (!colorCode) return;
     
@@ -486,12 +520,11 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       newColors = [...currentColors, colorCode];
     }
 
-    console.log('Color change with API CODE:', { 
-      colorCode, 
-      isSelected, 
-      currentColors, 
-      newColors 
-    });
+    console.log('[FILTER SIDEBAR] Color change with EXACT API CODE:');
+    console.log('  Selected color CODE (what API expects):', `"${colorCode}"`);
+    console.log('  Currently selected:', isSelected);
+    console.log('  Current colors in state:', currentColors);
+    console.log('  New colors array for API:', newColors);
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { colors: newColors.length > 0 ? newColors : undefined }
@@ -521,7 +554,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     this.onPriceChange();
   }
 
-  // FİX: onRatingChange - API CODE değerini kullan
+  // CRITICAL FIX: onRatingChange - API CODE değerini kullan
   onRatingChange(ratingCode: string | number, event: Event) {
     if (!ratingCode) return;
     
@@ -539,13 +572,12 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       newRatings = currentRatings.filter(r => r !== ratingValue);
     }
 
-    console.log('Rating change with API CODE:', { 
-      ratingCode, 
-      ratingValue, 
-      checked, 
-      currentRatings, 
-      newRatings 
-    });
+    console.log('[FILTER SIDEBAR] Rating change with EXACT API CODE:');
+    console.log('  Selected rating CODE (what API expects):', `"${ratingCode}"`);
+    console.log('  Extracted rating VALUE:', ratingValue);
+    console.log('  Checked:', checked);
+    console.log('  Current ratings in state:', currentRatings);
+    console.log('  New ratings array for API:', newRatings);
 
     this.store.dispatch(ProductActions.setFilters({
       filters: { ratings: newRatings.length > 0 ? newRatings : undefined }

@@ -55,7 +55,8 @@
       </div>
     </div>
 
-    <!-- Beden -->
+    <!-- CRITICAL FIX: Beden - API CODE kullanımı -->
+       <!-- Beden -->
     <div class="filter-section">
       <h4 class="filter-title">Beden</h4>
       <div class="filter-options">
@@ -75,18 +76,20 @@
       </div>
     </div>
 
-    <!-- Cinsiyet -->
+    <!-- CRITICAL FIX: Cinsiyet - API CODE kullanımı -->
     <div class="filter-section">
       <h4 class="filter-title">Cinsiyet</h4>
       <div class="filter-options">
         <label 
           *ngFor="let gender of genders" 
           class="checkbox-option">
+          <!-- FIXED: checkbox value'da API CODE kullan, checked kontrolünde de API CODE kullan -->
           <input 
             type="checkbox"
-            [value]="gender.code || gender.id"
+            [value]="gender.code"
             [checked]="gender.code ? isSelected('genders', gender.code) : false"
-            (change)="gender.code && onGenderChange(gender.code, $event)">
+            (change)="gender.code && onGenderChange(gender.code, $event)"
+            [title]="'API Code: ' + gender.code + ', Display: ' + gender.name">
           <span class="checkbox-label">
             {{ gender.name }}
             <span class="count" *ngIf="gender.count">({{ gender.count }})</span>
@@ -95,8 +98,8 @@
       </div>
     </div>
 
-    <!-- Renk - DÜZELTİLDİ -->
-    <div class="filter-section">
+    <!-- CRITICAL FIX: Renk - API CODE kullanımı -->
+    <div class="filter-sidebar">
       <h4 class="filter-title">Renk</h4>
       <div class="color-grid">
         <div 
@@ -104,7 +107,7 @@
           class="color-option"
           [class.selected]="isColorSelected(color)"
           (click)="onColorClick(color)"
-          [title]="color.name">
+          [title]="'API Code: ' + color.code + ', Display: ' + color.name">
           <div 
             class="color-circle"
             [style.background-color]="color.hexCode">
@@ -144,18 +147,20 @@
       </div>
     </div>
 
-    <!-- Değerlendirmeler -->
+    <!-- CRITICAL FIX: Değerlendirmeler - API CODE kullanımı -->
     <div class="filter-section">
       <h4 class="filter-title">Değerlendirmeler</h4>
       <div class="filter-options">
         <label 
           *ngFor="let rating of ratingOptions" 
           class="checkbox-option">
+          <!-- FIXED: checkbox value'da API CODE kullan, checked kontrolünde de API CODE kullan -->
           <input 
             type="checkbox"
-            [value]="rating.code || rating.value"
+            [value]="rating.code"
             [checked]="isRatingSelected(rating)"
-            (change)="onRatingClick(rating, $event)">
+            (change)="onRatingClick(rating, $event)"
+            [title]="'API Code: ' + rating.code + ', Display: ' + rating.name">
           <span class="checkbox-label">
             <div class="stars">
               <span *ngFor="let star of getStars(rating.value || extractRatingValue(rating.name))" 
