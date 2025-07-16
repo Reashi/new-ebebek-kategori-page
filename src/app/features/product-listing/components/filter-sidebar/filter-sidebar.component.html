@@ -65,7 +65,7 @@
           class="checkbox-option">
           <input 
             type="checkbox"
-            [value]="size.code || size.id"
+            [value]="size.code"
             [checked]="size.code ? isSelected('sizes', size.code) : false"
             (change)="size.code && onSizeChange(size.code, $event)">
           <span class="checkbox-label">

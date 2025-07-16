@@ -46,18 +46,61 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
   filters$: Observable<ProductFilters>;
   hasActiveFilters$: Observable<boolean>;
 
-  // Filter data - Static kategoriler
+  // Filter data - Gerçek e-bebek kategorileri
   categories: Category[] = [
-    { id: 'strollers', name: 'Bebek Arabaları' },
-    { id: 'food', name: 'Mama & Beslenme' },
-    { id: 'toys', name: 'Oyuncaklar' },
-    { id: 'feeding', name: 'Emzirme & Beslenme' },
-    { id: 'safety', name: 'Güvenlik' },
-    { id: 'care', name: 'Bakım & Hijyen' },
-    { id: 'car-seats', name: 'Oto Koltuğu' },
-    { id: 'diapers', name: 'Bez & Islak Mendil' },
-    { id: 'bath', name: 'Banyo' },
-    { id: 'sleep', name: 'Uyku' }
+    { id: '2-kapili-dolaplar', name: '2 Kapılı Dolaplar' },
+    { id: '3-kapili-dolap', name: '3 Kapılı Dolap' },
+    { id: '3-tekerlekli-bebek-bisikletleri', name: '3 Tekerlekli Bebek Bisikletleri' },
+    { id: '4-tekerlekli-bebek-bisikletleri', name: '4 Tekerlekli Bebek Bisikletleri' },
+    { id: 'ahsap-besik', name: 'Ahşap Beşik' },
+    { id: 'ahsap-sandalye', name: 'Ahşap Sandalye' },
+    { id: 'ahsap-cocuk-masalari', name: 'Ahşap Çocuk Masaları' },
+    { id: 'akulu-araba', name: 'Akülü Araba' },
+    { id: 'alt-degistirme-masalari', name: 'Alt Değiştirme Masaları' },
+    { id: 'altin-kitaplar', name: 'Altın Kitaplar' },
+    { id: 'anne-baba-egitim-kitaplari', name: 'Anne Baba Eğitim Kitapları' },
+    { id: 'anne-bakim-urunleri', name: 'Anne Bakım Ürünleri' },
+    { id: 'anne-bebek-bakim-cantasi', name: 'Anne Bebek Bakım Çantası' },
+    { id: 'anne-yani-besigi', name: 'Anne Yanı Beşiği' },
+    { id: 'ara-katli-park-yatak', name: 'Ara Katlı Park Yatak' },
+    { id: 'ara-katsiz-park-yatak', name: 'Ara Katsız Park Yatak' },
+    { id: 'atistirmalik-mama', name: 'Atıştırmalık Mama' },
+    { id: 'bal-oyuncak', name: 'Bal Oyuncak' },
+    { id: 'baston-puset', name: 'Baston Puset' },
+    { id: 'bavul', name: 'Bavul' },
+    { id: 'bebek', name: 'Bebek' },
+    { id: 'bebek-ahsap-bloklar', name: 'Bebek Ahşap Bloklar' },
+    { id: 'bebek-aktivite-masasi', name: 'Bebek Aktivite Masası' },
+    { id: 'bebek-aktiviteli-oyuncak', name: 'Bebek Aktiviteli Oyuncak' },
+    { id: 'bebek-alt-acma-ortusu', name: 'Bebek Alt Açma Örtüsü' },
+    { id: 'bebek-alt-ust-takim', name: 'Bebek Alt Üst Takım' },
+    { id: 'bebek-alindan-ates-olcer', name: 'Bebek Alından Ateş Ölçer' },
+    { id: 'bebek-alistirma-bardagi', name: 'Bebek Alıştırma Bardağı' },
+    { id: 'bebek-alistirma-kulodu', name: 'Bebek Alıştırma Külodu' },
+    { id: 'bebek-araba-aynasi', name: 'Bebek Araba Aynası' },
+    { id: 'bebek-araba-gunesligi', name: 'Bebek Araba Güneşliği' },
+    { id: 'bebek-arabasi', name: 'Bebek Arabası' },
+    { id: 'bebek-arabasi-minderi', name: 'Bebek Arabası Minderi' },
+    { id: 'bebek-arabasi-organizatoru', name: 'Bebek Arabası Organizatörü' },
+    { id: 'bebek-arabasi-tentesi', name: 'Bebek Arabası Tentesi' },
+    { id: 'bebek-arabasi-yagmurlugu', name: 'Bebek Arabası Yağmurluğu' },
+    { id: 'bebek-astronot-tulum', name: 'Bebek Astronot Tulum' },
+    { id: 'bebek-ates-dusurucu', name: 'Bebek Ateş Düşürücü' },
+    { id: 'bebek-atletleri', name: 'Bebek Atletleri' },
+    { id: 'bebek-bakim-urunleri', name: 'Bebek Bakım Ürünleri' },
+    { id: 'bebek-banyo-kopugu', name: 'Bebek Banyo Köpüğü' },
+    { id: 'bebek-banyo-kuvet-ayagi', name: 'Bebek Banyo Küvet Ayağı' },
+    { id: 'bebek-banyo-kuvet-filesi', name: 'Bebek Banyo Küvet Filesi' },
+    { id: 'bebek-banyo-oyuncaklari', name: 'Bebek Banyo Oyuncakları' },
+    { id: 'bebek-banyo-sungeri', name: 'Bebek Banyo Süngeri' },
+    { id: 'bebek-banyo-termometresi', name: 'Bebek Banyo Termometresi' },
+    { id: 'bebek-banyo-urunleri', name: 'Bebek Banyo Ürünleri' },
+    { id: 'bebek-banyo-sapkasi', name: 'Bebek Banyo Şapkası' },
+    { id: 'bebek-bardak-uclari', name: 'Bebek Bardak Uçları' },
+    { id: 'bebek-basket-potasi', name: 'Bebek Basket Potası' },
+    { id: 'bebek-battaniyeleri', name: 'Bebek Battaniyeleri' },
+    { id: 'bebek-bere-eldiven-atki', name: 'Bebek Bere-Eldiven-Atkı' },
+    { id: 'bebek-bilek-corap', name: 'Bebek Bilek Çorap' }
   ];
 
   brands: Brand[] = [
@@ -174,24 +217,57 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     const sizeFacet = facets.find(f => f.code === 'size');
     if (sizeFacet?.values) {
       console.log('[FILTER SIDEBAR] Size facet values:', sizeFacet.values);
-      this.availableSizes = sizeFacet.values
-        .filter((value: ApiFacetValue) => value.code && value.name)
-        .map((value: ApiFacetValue) => {
+      // Önce tüm geçerli seçenekleri al
+      const filteredSizes = sizeFacet.values
+        .filter((value: ApiFacetValue) => {
+          // Temel filtreleme
+          if (!value.code || !value.name) return false;
           
-          console.log('[SIZE DEBUG] Original API value:', {
-            code: value.code,
-            name: value.name,
-            count: value.count
-          });
+          // Boyut olan seçenekleri kaldır (cm, x içerenler)
+          if (value.code.includes('cm') || value.code.includes('x')) return false;
           
-          return {
-            id: this.normalizeSizeCode(value.code), // Backward compatibility
-            code: value.code, // API'nin TAM OLARAK BEKLEDİĞİ DEĞER - HİÇ DEĞİŞTİRME!
-            name: value.name, // UI'da gösterilen değer
-            count: Number(value.count) || 0
-          };
+          // Beden numaraları (S, M, L, XL, sayılar) ve yaş gruplarını tut
+          const keepPatterns = [
+            /^\d+$/, // Sadece sayı (19, 20, 21, vs)
+            /^[SMLX]+$/, // Harf bedenleri (S, M, L, XL, 2XL)
+            /^\d+[ABC]$/, // Bra bedenleri (80B, 90B, vs)
+            /Ya[şs]/, // Yaş içerenler
+            /Ay/, // Ay içerenler
+            /Yenido[ğg]an/, // Yenidoğan
+            /Premat[üu]re/, // Prematüre
+            /Standart/, // Standart
+            /Beden/ // X Beden formatı
+          ];
+          
+          return keepPatterns.some(pattern => pattern.test(value.code));
         });
+      
+      // Yaş gruplarını birleştir
+      const groupedSizes = this.groupSimilarSizes(filteredSizes);
+      
+      this.availableSizes = groupedSizes.map((value: ApiFacetValue) => {
+        console.log('[SIZE DEBUG] Original API value:', {
+          code: value.code,
+          name: value.name,
+          count: value.count
+        });
+        
+        return {
+          id: this.normalizeSizeCode(value.code), // Backward compatibility
+          code: value.code, // API'nin TAM OLARAK BEKLEDİĞİ DEĞER - HİÇ DEĞİŞTİRME!
+          name: value.name, // UI'da gösterilen değer
+          count: Number(value.count) || 0
+        };
+      });
       console.log('[FILTER SIDEBAR] Processed sizes with CLEANED API codes:', this.availableSizes);
+      
+      // 1,5 Yaş'ı özellikle kontrol et
+      const yasFiltesi = this.availableSizes.find(s => s.code && s.code.includes('1,5'));
+      if (yasFiltesi) {
+        console.log('[FILTER SIDEBAR] 1,5 Yaş filter bulundu:', yasFiltesi);
+      } else {
+        console.log('[FILTER SIDEBAR] 1,5 Yaş filter bulunamadı! Tüm codes:', this.availableSizes.map(s => s.code));
+      }
     }
 
     // Gender facet'i işle - CODE DEĞERİNİ AYNEN KULLAN
@@ -217,7 +293,18 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     if (colorFacet?.values) {
       console.log('[FILTER SIDEBAR] Color facet values:', colorFacet.values);
       this.availableColors = colorFacet.values
-        .filter((value: ApiFacetValue) => value.code && value.name)
+        .filter((value: ApiFacetValue) => {
+          // Null, undefined, boş string olan seçenekleri çıkar
+          if (!value.code || !value.name) return false;
+          
+          // "null" string'i olan seçenekleri çıkar
+          if (value.code === 'null' || value.name === 'null') return false;
+          
+          // Boş veya geçersiz RGB kodları çıkar
+          if (value.code.trim() === '' || value.name.trim() === '') return false;
+          
+          return true;
+        })
         .map((value: ApiFacetValue) => {
           
           return {
@@ -275,6 +362,70 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       .replace(/[^a-z0-9]/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
+  }
+
+  private groupSimilarSizes(sizes: ApiFacetValue[]): ApiFacetValue[] {
+    const groups: { [key: string]: ApiFacetValue[] } = {};
+    const sizeGroups: { [key: string]: string[] } = {
+      '0-6 Ay': ['0 Ay+', '0-24 Ay', '0-3 Ay', '0-6 Ay'],
+      '1-2 Yaş': ['1 Yaş', '1-2 Yaş', '1-4 Yaş'],
+      '12-18 Ay': ['12 Ay+', '12-18 Ay', '12-2 Yaş'],
+      '18-24 Ay': ['17', '18', '18 Ay+', '18-24 Ay', '19'],
+      '2-3 Yaş': ['2', '2 Yaş', '2-3 Yaş', '2-4 Yaş'],
+      '3-4 Yaş': ['3', '3 Yaş', '3-4 Yaş'],
+      '4-5 Yaş': ['4', '4 Yaş', '4-5 Yaş', '4 - 5 Yaş'],
+      '17-19 Numara': ['17', '18', '19'],
+      '20-22 Numara': ['20', '21', '22'],
+      '23-25 Numara': ['23', '24', '25'],
+      '26-28 Numara': ['26', '27', '28']
+    };
+
+    // Önce gruplara ayır
+    sizes.forEach(size => {
+      let grouped = false;
+      
+      for (const [groupName, groupItems] of Object.entries(sizeGroups)) {
+        if (groupItems.includes(size.code)) {
+          if (!groups[groupName]) {
+            groups[groupName] = [];
+          }
+          groups[groupName].push(size);
+          grouped = true;
+          break;
+        }
+      }
+      
+      // Gruplara dahil olmayan seçenekleri olduğu gibi tut
+      if (!grouped) {
+        groups[size.code] = [size];
+      }
+    });
+
+    // Her gruptan en yüksek count'lu olanı seç ve count'ları topla
+    const result: ApiFacetValue[] = [];
+    
+    for (const [groupName, groupItems] of Object.entries(groups)) {
+      if (groupItems.length === 1) {
+        // Tek eleman varsa olduğu gibi ekle
+        result.push(groupItems[0]);
+      } else {
+        // Birden fazla eleman varsa en yüksek count'lu olanı seç
+        const bestItem = groupItems.reduce((best, current) => 
+          (current.count > best.count) ? current : best
+        );
+        
+        // Count'ları topla
+        const totalCount = groupItems.reduce((sum, item) => sum + item.count, 0);
+        
+        result.push({
+          ...bestItem,
+          count: totalCount,
+          name: groupName // Grup adını kullan
+        });
+      }
+    }
+
+    return result;
   }
 
   private mapGenderCode(apiCode: string): string {
@@ -453,11 +604,25 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     const checked = (event.target as HTMLInputElement).checked;
     const currentSizes = this.currentFilters.sizes || [];
     
+    // HTML checkbox value'dan da kontrol et
+    const checkboxValue = (event.target as HTMLInputElement).value;
+    console.log('Checkbox value from HTML:', checkboxValue);
+    console.log('Parameter sizeCode:', sizeCode);
+    console.log('Are they equal?', checkboxValue === sizeCode);
+    
+    // Eğer HTML'den gelen value yanlışsa, parametreyi düzelt
+    let correctSizeCode = sizeCode;
+    if (checkboxValue.includes('.') && !sizeCode.includes('.')) {
+      // HTML'den nokta geliyorsa ama parametre virgül içeriyorsa
+      correctSizeCode = checkboxValue.replace('.', ',');
+      console.log('CORRECTED sizeCode from', sizeCode, 'to', correctSizeCode);
+    }
+    
     let newSizes: string[];
     if (checked) {
-      newSizes = [...currentSizes, sizeCode];
+      newSizes = [...currentSizes, correctSizeCode];
     } else {
-      newSizes = currentSizes.filter(code => code !== sizeCode);
+      newSizes = currentSizes.filter(code => code !== correctSizeCode);
     }
 
     console.log('Size change with API CODE:', { 
@@ -468,12 +633,6 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       currentSizes, 
       newSizes 
     });
-
-    // HTML checkbox value'dan da kontrol et
-    const checkboxValue = (event.target as HTMLInputElement).value;
-    console.log('Checkbox value from HTML:', checkboxValue);
-    console.log('Parameter sizeCode:', sizeCode);
-    console.log('Are they equal?', checkboxValue === sizeCode);
 
     // Gönderilen değeri de logla
     console.log('Dispatching size filter with values:', newSizes);
@@ -490,11 +649,33 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     const checked = (event.target as HTMLInputElement).checked;
     const currentGenders = this.currentFilters.genders || [];
     
+    // HTML checkbox value'yu da kontrol et
+    const checkboxValue = (event.target as HTMLInputElement).value;
+    console.log('  Checkbox value from HTML:', checkboxValue);
+    console.log('  Parameter genderCode:', genderCode);
+    console.log('  Are they equal?', checkboxValue === genderCode);
+    
+    // Eğer HTML'den name geliyor ama API code'u bekliyorsa, düzelt
+    let correctGenderCode = genderCode;
+    if (checkboxValue === 'Kız Bebek') {
+      correctGenderCode = 'GIRL';
+    } else if (checkboxValue === 'Erkek Bebek') {
+      correctGenderCode = 'MALE';
+    } else if (checkboxValue === 'Unisex') {
+      correctGenderCode = 'UNISEX';
+    } else if (checkboxValue === 'Kadın') {
+      correctGenderCode = 'FEMALE';
+    }
+    
+    if (correctGenderCode !== genderCode) {
+      console.log('  CORRECTED genderCode from', genderCode, 'to', correctGenderCode);
+    }
+    
     let newGenders: string[];
     if (checked) {
-      newGenders = [...currentGenders, genderCode];
+      newGenders = [...currentGenders, correctGenderCode];
     } else {
-      newGenders = currentGenders.filter(code => code !== genderCode);
+      newGenders = currentGenders.filter(code => code !== correctGenderCode);
     }
 
     console.log('[FILTER SIDEBAR] Gender change with EXACT API CODE:');
