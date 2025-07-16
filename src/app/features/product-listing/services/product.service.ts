@@ -94,61 +94,58 @@ export class ProductService {
   private readonly baseUrl = environment.ebebekApi?.baseUrl || 'https://www.e-bebek.com/apps/services/rest/ebebek';
   private readonly requestTimeout = environment.ebebekApi?.timeout || 30000;
 
-  // E-bebek kategori mapping - UPDATED: Use actual e-bebek category codes
-  private readonly categoryMapping: { [key: string]: string } = {
-    '2-kapili-dolaplar': '2 Kapılı Dolaplar',
-    '3-kapili-dolap': '3 Kapılı Dolap',
-    '3-tekerlekli-bebek-bisikletleri': '3 Tekerlekli Bebek Bisikletleri',
-    '4-tekerlekli-bebek-bisikletleri': '4 Tekerlekli Bebek Bisikletleri',
-    'ahsap-besik': 'Ahşap Beşik',
-    'ahsap-sandalye': 'Ahşap Sandalye',
-    'ahsap-cocuk-masalari': 'Ahşap Çocuk Masaları',
-    'akulu-araba': 'Akülü Araba',
-    'alt-degistirme-masalari': 'Alt Değiştirme Masaları',
-    'altin-kitaplar': 'Altın Kitaplar',
-    'anne-baba-egitim-kitaplari': 'Anne Baba Eğitim Kitapları',
-    'anne-bakim-urunleri': 'Anne Bakım Ürünleri',
-    'anne-bebek-bakim-cantasi': 'Anne Bebek Bakım Çantası',
-    'anne-yani-besigi': 'Anne Yanı Beşiği',
-    'ara-katli-park-yatak': 'Ara Katlı Park Yatak',
-    'ara-katsiz-park-yatak': 'Ara Katsız Park Yatak',
-    'atistirmalik-mama': 'Atıştırmalık Mama',
-    'bal-oyuncak': 'Bal Oyuncak',
-    'baston-puset': 'Baston Puset',
-    'bavul': 'Bavul',
-    'bebek': 'Bebek',
-    'bebek-ahsap-bloklar': 'Bebek Ahşap Bloklar',
-    'bebek-aktivite-masasi': 'Bebek Aktivite Masası',
-    'bebek-aktiviteli-oyuncak': 'Bebek Aktiviteli Oyuncak',
-    'bebek-alt-acma-ortusu': 'Bebek Alt Açma Örtüsü',
-    'bebek-alt-ust-takim': 'Bebek Alt Üst Takım',
-    'bebek-alindan-ates-olcer': 'Bebek Alından Ateş Ölçer',
-    'bebek-alistirma-bardagi': 'Bebek Alıştırma Bardağı',
-    'bebek-alistirma-kulodu': 'Bebek Alıştırma Külodu',
-    'bebek-araba-aynasi': 'Bebek Araba Aynası',
-    'bebek-araba-gunesligi': 'Bebek Araba Güneşliği',
-    'bebek-arabasi': 'Bebek Arabası',
-    'bebek-arabasi-minderi': 'Bebek Arabası Minderi',
-    'bebek-arabasi-organizatoru': 'Bebek Arabası Organizatörü',
-    'bebek-arabasi-tentesi': 'Bebek Arabası Tentesi',
-    'bebek-arabasi-yagmurlugu': 'Bebek Arabası Yağmurluğu',
-    'bebek-astronot-tulum': 'Bebek Astronot Tulum',
-    'bebek-ates-dusurucu': 'Bebek Ateş Düşürücü',
-    'bebek-atletleri': 'Bebek Atletleri',
-    'bebek-bakim-urunleri': 'Bebek Bakım Ürünleri',
-    'bebek-banyo-kopugu': 'Bebek Banyo Köpüğü',
-    'bebek-banyo-kuvet-ayagi': 'Bebek Banyo Küvet Ayağı',
-    'bebek-banyo-kuvet-filesi': 'Bebek Banyo Küvet Filesi',
-    'bebek-banyo-oyuncaklari': 'Bebek Banyo Oyuncakları',
-    'bebek-banyo-sungeri': 'Bebek Banyo Süngeri',
-    'bebek-banyo-termometresi': 'Bebek Banyo Termometresi',
-    'bebek-banyo-urunleri': 'Bebek Banyo Ürünleri',
-    'bebek-banyo-sapkasi': 'Bebek Banyo Şapkası',
-    'bebek-bardak-uclari': 'Bebek Bardak Uçları',
-    'bebek-basket-potasi': 'Bebek Basket Potası',
-    'bebek-battaniyeleri': 'Bebek Battaniyeleri',
-    'bebek-bere-eldiven-atki': 'Bebek Bere-Eldiven-Atkı',
-    'bebek-bilek-corap': 'Bebek Bilek Çorap'
+  // E-bebek kategori mapping - UPDATED: Use URL-friendly format with name and code
+  private readonly categoryMapping: { [key: string]: { name: string; code: string } } = {
+    '2-kapili-dolaplar': { name: '2-kapili-dolaplar', code: '7062' },
+    '3-kapili-dolap': { name: '3-kapili-dolap', code: '7061' },
+    '3-tekerlekli-bebek-bisikletleri': { name: '3-tekerlekli-bebek-bisikletleri', code: '4563' },
+    '4-tekerlekli-bebek-bisikletleri': { name: '4-tekerlekli-bebek-bisikletleri', code: '4562' },
+    'ahsap-besik': { name: 'ahsap-besik', code: '7051' },
+    'ahsap-sandalye': { name: 'ahsap-sandalye', code: '7131' },
+    'ahsap-cocuk-masalari': { name: 'ahsap-cocuk-masalari', code: '7121' },
+    'akulu-araba': { name: 'akulu-araba', code: '4555' },
+    'alt-degistirme-masalari': { name: 'alt-degistirme-masalari', code: '7081' },
+    'anne-baba-egitim-kitaplari': { name: 'anne-baba-egitim-kitaplari', code: '4545' },
+    'anne-bakim-urunleri': { name: 'anne-bakim-urunleri', code: '3853' },
+    'anne-bebek-bakim-cantasi': { name: 'anne-bebek-bakim-cantasi', code: '4541' },
+    'anne-yani-besigi': { name: 'anne-yani-besigi', code: '10116' },
+    'ara-katli-park-yatak': { name: 'ara-katli-park-yatak', code: '10117' },
+    'ara-katsiz-park-yatak': { name: 'ara-katsiz-park-yatak', code: '10118' },
+    'atistirmalik-mama': { name: 'atistirmalik-mama', code: '4535' },
+    'baston-puset': { name: 'baston-puset', code: '4531' },
+    'bavul': { name: 'bavul', code: '4464' },
+    'bebek-ahsap-bloklar': { name: 'bebek-ahsap-bloklar', code: '4530' },
+    'bebek-aktivite-masasi': { name: 'bebek-aktivite-masasi', code: '4529' },
+    'bebek-aktiviteli-oyuncak': { name: 'bebek-aktiviteli-oyuncak', code: '4528' },
+    'bebek-alt-acma-ortusu': { name: 'bebek-alt-acma-ortusu', code: '4521' },
+    'bebek-alt-ust-takim': { name: 'bebek-alt-ust-takim', code: '4519' },
+    'bebek-alindan-ates-olcer': { name: 'bebek-alindan-ates-olcer', code: '4526' },
+    'bebek-alistirma-bardagi': { name: 'bebek-alistirma-bardagi', code: '4525' },
+    'bebek-alistirma-kulodu': { name: 'bebek-alistirma-kulodu', code: '4523' },
+    'bebek-araba-aynasi': { name: 'bebek-araba-aynasi', code: '4517' },
+    'bebek-araba-gunesligi': { name: 'bebek-araba-gunesligi', code: '4515' },
+    'bebek-arabasi': { name: 'bebek-arabasi', code: '3779' },
+    'bebek-arabasi-minderi': { name: 'bebek-arabasi-minderi', code: '4505' },
+    'bebek-arabasi-organizatoru': { name: 'bebek-arabasi-organizatoru', code: '4504' },
+    'bebek-arabasi-tentesi': { name: 'bebek-arabasi-tentesi', code: '4501' },
+    'bebek-arabasi-yagmurlugu': { name: 'bebek-arabasi-yagmurlugu', code: '4500' },
+    'bebek-astronot-tulum': { name: 'bebek-astronot-tulum', code: '4498' },
+    'bebek-ates-dusurucu': { name: 'bebek-ates-dusurucu', code: '4496' },
+    'bebek-atletleri': { name: 'bebek-atletleri', code: '4492' },
+    'bebek-bakim-urunleri': { name: 'bebek-bakim-urunleri', code: '4012' },
+    'bebek-banyo-kopugu': { name: 'bebek-banyo-kopugu', code: '4479' },
+    'bebek-banyo-kuvet-ayagi': { name: 'bebek-banyo-kuvet-ayagi', code: '4477' },
+    'bebek-banyo-kuvet-filesi': { name: 'bebek-banyo-kuvet-filesi', code: '4475' },
+    'bebek-banyo-oyuncaklari': { name: 'bebek-banyo-oyuncaklari', code: '4205' },
+    'bebek-banyo-sungeri': { name: 'bebek-banyo-sungeri', code: '4472' },
+    'bebek-banyo-termometresi': { name: 'bebek-banyo-termometresi', code: '4468' },
+    'bebek-banyo-urunleri': { name: 'bebek-banyo-urunleri', code: '4042' },
+    'bebek-banyo-sapkasi': { name: 'bebek-banyo-sapkasi', code: '4470' },
+    'bebek-bardak-uclari': { name: 'bebek-bardak-uclari', code: '4615' },
+    'bebek-basket-potasi': { name: 'bebek-basket-potasi', code: '4463' },
+    'bebek-battaniyeleri': { name: 'bebek-battaniyeleri', code: '4461' },
+    'bebek-bere-eldiven-atki': { name: 'bebek-bere-eldiven-atki', code: '3803' },
+    'bebek-bilek-corap': { name: 'bebek-bilek-corap', code: '3866' }
   };
 
   constructor(private http: HttpClient) {
@@ -230,9 +227,10 @@ export class ProductService {
   
   let queryParts: string[] = [];
 
-  // Sıralama (her zaman ilk sırada)
+  // Sıralama (her zaman ilk sırada) - duplicate format
   const sort = this.mapSortBy(sortBy);
-  queryParts.push(`:${sort}`);
+  queryParts.push(`sort:"${sort}"`);
+  queryParts.push(`sort:${sort}`);
 
   // Eğer filters undefined, null veya empty object ise
   if (!filters || Object.keys(filters).length === 0) {
@@ -245,10 +243,14 @@ export class ProductService {
   // KATEGORI FİLTRESİ
   if (filters.categoryId) {
     console.log('[PRODUCT SERVICE] Adding category filter:', filters.categoryId);
-    const ebebekCategoryCode = this.categoryMapping[filters.categoryId];
-    if (ebebekCategoryCode) {
-      queryParts.push(`allCategories:${ebebekCategoryCode}`);
-      console.log('[PRODUCT SERVICE] Category query part added:', `allCategories:${ebebekCategoryCode}`);
+    const ebebekCategoryInfo = this.categoryMapping[filters.categoryId];
+    if (ebebekCategoryInfo) {
+      // E-bebek API kategori format - sadece numeric kod, duplicate format
+      const categoryCode = ebebekCategoryInfo.code;
+      queryParts.push(`category:"${categoryCode}"`);
+      queryParts.push(`category:${categoryCode}`);
+      console.log('[PRODUCT SERVICE] Duplicate category query parts added for E-bebek API');
+      console.log('[PRODUCT SERVICE] Category code used:', categoryCode);
     }
   }
 
@@ -405,12 +407,13 @@ export class ProductService {
 
   private mapSortBy(sortBy?: string): string {
       const sortMap: { [key: string]: string } = {
-        'name': 'name-asc',
+        'relevance': 'relevance',
         'price-asc': 'price-asc',
         'price-desc': 'price-desc',
-        'rating': 'rating-desc',
-        'newest': 'creationtime-desc',
-        'popularity': 'relevance'
+        'mostReviewed': 'mostReviewed',
+        'discount-desc': 'discount-desc',
+        'topFavorites': 'topFavorites',
+        'newlyToOld': 'newlyToOld'
       };
 
       return sortMap[sortBy || 'relevance'] || 'relevance';

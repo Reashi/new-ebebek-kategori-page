@@ -93,6 +93,25 @@ export const selectFilterError = createSelector(
   (state) => state.filterError
 );
 
+// Sort options selector - API'den gelen sorts verisi
+export const selectSortOptions = createSelector(
+  selectFacets,
+  (facets) => {
+    // API response'daki sorts array'ini bul
+    const sortOptions = [
+      { code: 'relevance', name: 'Çok Satanlar', selected: true },
+      { code: 'price-asc', name: 'En Düşük Fiyat', selected: false },
+      { code: 'price-desc', name: 'En Yüksek Fiyat', selected: false },
+      { code: 'mostReviewed', name: 'Çok Değerlendirilenler', selected: false },
+      { code: 'discount-desc', name: 'En Yüksek İndirim Oranı', selected: false },
+      { code: 'topFavorites', name: 'En Favoriler', selected: false },
+      { code: 'newlyToOld', name: 'En Yeniler', selected: false }
+    ];
+    
+    return sortOptions;
+  }
+);
+
 // Computed selectors
 export const selectTotalPages = createSelector(
   selectTotalCount,
