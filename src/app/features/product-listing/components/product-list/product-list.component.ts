@@ -161,8 +161,19 @@ export class ProductListComponent implements OnInit, OnDestroy {
   hasActiveFilters$: Observable<boolean>;
   
   // Form data
-  sortBy = 'name';
+  sortBy = 'relevance';
   viewMode: 'grid' | 'list' = 'grid';
+  
+  // Sıralama seçenekleri
+  sortOptions = [
+    { value: 'relevance', label: 'Çok Satanlar', selected: true },
+    { value: 'price-asc', label: 'En Düşük Fiyat', selected: false },
+    { value: 'price-desc', label: 'En Yüksek Fiyat', selected: false },
+    { value: 'mostReviewed', label: 'Çok Değerlendirilenler', selected: false },
+    { value: 'discount-desc', label: 'En Yüksek İndirim Oranı', selected: false },
+    { value: 'topFavorites', label: 'En Favoriler', selected: false },
+    { value: 'newlyToOld', label: 'En Yeniler', selected: false }
+  ];
   
   // Loading state helpers
   loadingItems = Array(12).fill(0);
@@ -219,7 +230,13 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   onSortChange() {
-    console.log('Sort by:', this.sortBy);
+    console.log('[PRODUCT LIST] Sort by:', this.sortBy);
+    console.log('[PRODUCT LIST] Dispatching setSortBy with:', { sortBy: this.sortBy });
+    // Sıralama seçeneklerini güncelle
+    this.sortOptions = this.sortOptions.map(option => ({
+      ...option,
+      selected: option.value === this.sortBy
+    }));
     this.store.dispatch(ProductActions.setSortBy({ sortBy: this.sortBy }));
   }
 

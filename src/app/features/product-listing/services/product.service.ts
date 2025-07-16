@@ -227,10 +227,11 @@ export class ProductService {
   
   let queryParts: string[] = [];
 
-  // Sıralama (her zaman ilk sırada) - duplicate format
+  // Sıralama (her zaman ilk sırada) - tek parametre
+  console.log('[PRODUCT SERVICE] Received sortBy parameter:', sortBy);
   const sort = this.mapSortBy(sortBy);
-  queryParts.push(`sort:"${sort}"`);
-  queryParts.push(`sort:${sort}`);
+  console.log('[PRODUCT SERVICE] Mapped sort value:', sort);
+  queryParts.push(`:${sort}`);
 
   // Eğer filters undefined, null veya empty object ise
   if (!filters || Object.keys(filters).length === 0) {
