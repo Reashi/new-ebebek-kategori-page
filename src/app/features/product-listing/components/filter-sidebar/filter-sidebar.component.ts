@@ -178,19 +178,15 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
         .filter((value: ApiFacetValue) => value.code && value.name)
         .map((value: ApiFacetValue) => {
           
-          
-          // CRITICAL FIX: API code'u tamamen temizle ve normalize et
-          let cleanCode = value.code;
-          
-          // Eğer API'den gelen code'da URL encoding varsa temizle
-          if (cleanCode.includes('%') || cleanCode.includes('+')) {
-            cleanCode = decodeURIComponent(cleanCode.replace(/\+/g, ' '));
-            
-          }
+          console.log('[SIZE DEBUG] Original API value:', {
+            code: value.code,
+            name: value.name,
+            count: value.count
+          });
           
           return {
-            id: this.normalizeSizeCode(cleanCode), // Backward compatibility
-            code: cleanCode, // Temizlenmiş API code
+            id: this.normalizeSizeCode(value.code), // Backward compatibility
+            code: value.code, // API'nin TAM OLARAK BEKLEDİĞİ DEĞER - HİÇ DEĞİŞTİRME!
             name: value.name, // UI'da gösterilen değer
             count: Number(value.count) || 0
           };
@@ -472,6 +468,12 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       currentSizes, 
       newSizes 
     });
+
+    // HTML checkbox value'dan da kontrol et
+    const checkboxValue = (event.target as HTMLInputElement).value;
+    console.log('Checkbox value from HTML:', checkboxValue);
+    console.log('Parameter sizeCode:', sizeCode);
+    console.log('Are they equal?', checkboxValue === sizeCode);
 
     // Gönderilen değeri de logla
     console.log('Dispatching size filter with values:', newSizes);

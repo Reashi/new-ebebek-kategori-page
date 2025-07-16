@@ -235,8 +235,9 @@ export class ProductService {
     if (validSizes.length > 0) {
       // CRITICAL FIX: Birden fazla size için tek parametre kullan
       // E-bebek API format: size:"2-3 Yaş":"1-2 Yaş" (birleşik)
+      // Virgül karakterini URL encode et
       const sizesQuery = validSizes
-        .map(sizeCode => `"${sizeCode}"`)
+        .map(sizeCode => `"${sizeCode.replace(/,/g, '%2C')}"`)
         .join(':');
       
       queryParts.push(`size:${sizesQuery}`);
