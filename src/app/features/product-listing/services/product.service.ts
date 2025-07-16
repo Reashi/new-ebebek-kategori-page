@@ -94,18 +94,58 @@ export class ProductService {
   private readonly baseUrl = environment.ebebekApi?.baseUrl || 'https://www.e-bebek.com/apps/services/rest/ebebek';
   private readonly requestTimeout = environment.ebebekApi?.timeout || 30000;
 
-  // E-bebek kategori mapping
-  private readonly categoryMapping: { [key: string]: string } = {
-    'strollers': '0002',
-    'food': '0003',
-    'toys': '0004',
-    'feeding': '0005',
-    'safety': '0006',
-    'care': '0007',
-    'car-seats': '0008',
-    'diapers': '0009',
-    'bath': '0010',
-    'sleep': '0011'
+  // E-bebek kategori mapping - UPDATED: Use URL-friendly format with name and code
+  private readonly categoryMapping: { [key: string]: { name: string; code: string } } = {
+    '2-kapili-dolaplar': { name: '2-kapili-dolaplar', code: '7062' },
+    '3-kapili-dolap': { name: '3-kapili-dolap', code: '7061' },
+    '3-tekerlekli-bebek-bisikletleri': { name: '3-tekerlekli-bebek-bisikletleri', code: '4563' },
+    '4-tekerlekli-bebek-bisikletleri': { name: '4-tekerlekli-bebek-bisikletleri', code: '4562' },
+    'ahsap-besik': { name: 'ahsap-besik', code: '7051' },
+    'ahsap-sandalye': { name: 'ahsap-sandalye', code: '7131' },
+    'ahsap-cocuk-masalari': { name: 'ahsap-cocuk-masalari', code: '7121' },
+    'akulu-araba': { name: 'akulu-araba', code: '4555' },
+    'alt-degistirme-masalari': { name: 'alt-degistirme-masalari', code: '7081' },
+    'anne-baba-egitim-kitaplari': { name: 'anne-baba-egitim-kitaplari', code: '4545' },
+    'anne-bakim-urunleri': { name: 'anne-bakim-urunleri', code: '3853' },
+    'anne-bebek-bakim-cantasi': { name: 'anne-bebek-bakim-cantasi', code: '4541' },
+    'anne-yani-besigi': { name: 'anne-yani-besigi', code: '10116' },
+    'ara-katli-park-yatak': { name: 'ara-katli-park-yatak', code: '10117' },
+    'ara-katsiz-park-yatak': { name: 'ara-katsiz-park-yatak', code: '10118' },
+    'atistirmalik-mama': { name: 'atistirmalik-mama', code: '4535' },
+    'baston-puset': { name: 'baston-puset', code: '4531' },
+    'bavul': { name: 'bavul', code: '4464' },
+    'bebek-ahsap-bloklar': { name: 'bebek-ahsap-bloklar', code: '4530' },
+    'bebek-aktivite-masasi': { name: 'bebek-aktivite-masasi', code: '4529' },
+    'bebek-aktiviteli-oyuncak': { name: 'bebek-aktiviteli-oyuncak', code: '4528' },
+    'bebek-alt-acma-ortusu': { name: 'bebek-alt-acma-ortusu', code: '4521' },
+    'bebek-alt-ust-takim': { name: 'bebek-alt-ust-takim', code: '4519' },
+    'bebek-alindan-ates-olcer': { name: 'bebek-alindan-ates-olcer', code: '4526' },
+    'bebek-alistirma-bardagi': { name: 'bebek-alistirma-bardagi', code: '4525' },
+    'bebek-alistirma-kulodu': { name: 'bebek-alistirma-kulodu', code: '4523' },
+    'bebek-araba-aynasi': { name: 'bebek-araba-aynasi', code: '4517' },
+    'bebek-araba-gunesligi': { name: 'bebek-araba-gunesligi', code: '4515' },
+    'bebek-arabasi': { name: 'bebek-arabasi', code: '3779' },
+    'bebek-arabasi-minderi': { name: 'bebek-arabasi-minderi', code: '4505' },
+    'bebek-arabasi-organizatoru': { name: 'bebek-arabasi-organizatoru', code: '4504' },
+    'bebek-arabasi-tentesi': { name: 'bebek-arabasi-tentesi', code: '4501' },
+    'bebek-arabasi-yagmurlugu': { name: 'bebek-arabasi-yagmurlugu', code: '4500' },
+    'bebek-astronot-tulum': { name: 'bebek-astronot-tulum', code: '4498' },
+    'bebek-ates-dusurucu': { name: 'bebek-ates-dusurucu', code: '4496' },
+    'bebek-atletleri': { name: 'bebek-atletleri', code: '4492' },
+    'bebek-bakim-urunleri': { name: 'bebek-bakim-urunleri', code: '4012' },
+    'bebek-banyo-kopugu': { name: 'bebek-banyo-kopugu', code: '4479' },
+    'bebek-banyo-kuvet-ayagi': { name: 'bebek-banyo-kuvet-ayagi', code: '4477' },
+    'bebek-banyo-kuvet-filesi': { name: 'bebek-banyo-kuvet-filesi', code: '4475' },
+    'bebek-banyo-oyuncaklari': { name: 'bebek-banyo-oyuncaklari', code: '4205' },
+    'bebek-banyo-sungeri': { name: 'bebek-banyo-sungeri', code: '4472' },
+    'bebek-banyo-termometresi': { name: 'bebek-banyo-termometresi', code: '4468' },
+    'bebek-banyo-urunleri': { name: 'bebek-banyo-urunleri', code: '4042' },
+    'bebek-banyo-sapkasi': { name: 'bebek-banyo-sapkasi', code: '4470' },
+    'bebek-bardak-uclari': { name: 'bebek-bardak-uclari', code: '4615' },
+    'bebek-basket-potasi': { name: 'bebek-basket-potasi', code: '4463' },
+    'bebek-battaniyeleri': { name: 'bebek-battaniyeleri', code: '4461' },
+    'bebek-bere-eldiven-atki': { name: 'bebek-bere-eldiven-atki', code: '3803' },
+    'bebek-bilek-corap': { name: 'bebek-bilek-corap', code: '3866' }
   };
 
   constructor(private http: HttpClient) {
@@ -141,6 +181,8 @@ export class ProductService {
         timeout(this.requestTimeout),
         map((response: EbebekApiResponse) => {
           console.log('[API RESPONSE] /products/search', response);
+    console.log('[API RESPONSE] Products array:', response.products);
+    console.log('[API RESPONSE] Pagination:', response.pagination);
           return this.mapApiResponse(response, params);
         }),
         catchError((error: unknown) => {
@@ -185,8 +227,10 @@ export class ProductService {
   
   let queryParts: string[] = [];
 
-  // Sıralama (her zaman ilk sırada)
+  // Sıralama (her zaman ilk sırada) - tek parametre
+  console.log('[PRODUCT SERVICE] Received sortBy parameter:', sortBy);
   const sort = this.mapSortBy(sortBy);
+  console.log('[PRODUCT SERVICE] Mapped sort value:', sort);
   queryParts.push(`:${sort}`);
 
   // Eğer filters undefined, null veya empty object ise
@@ -200,10 +244,14 @@ export class ProductService {
   // KATEGORI FİLTRESİ
   if (filters.categoryId) {
     console.log('[PRODUCT SERVICE] Adding category filter:', filters.categoryId);
-    const ebebekCategoryCode = this.categoryMapping[filters.categoryId];
-    if (ebebekCategoryCode) {
-      queryParts.push(`allCategories:${ebebekCategoryCode}`);
-      console.log('[PRODUCT SERVICE] Category query part added:', `allCategories:${ebebekCategoryCode}`);
+    const ebebekCategoryInfo = this.categoryMapping[filters.categoryId];
+    if (ebebekCategoryInfo) {
+      // E-bebek API kategori format - sadece numeric kod, duplicate format
+      const categoryCode = ebebekCategoryInfo.code;
+      queryParts.push(`category:"${categoryCode}"`);
+      queryParts.push(`category:${categoryCode}`);
+      console.log('[PRODUCT SERVICE] Duplicate category query parts added for E-bebek API');
+      console.log('[PRODUCT SERVICE] Category code used:', categoryCode);
     }
   }
 
@@ -233,14 +281,12 @@ export class ProductService {
       .map(size => size.trim());
     
     if (validSizes.length > 0) {
-      // CRITICAL FIX: Birden fazla size için tek parametre kullan
-      // E-bebek API format: size:"2-3 Yaş":"1-2 Yaş" (birleşik)
-      const sizesQuery = validSizes
-        .map(sizeCode => `"${sizeCode}"`)
-        .join(':');
-      
-      queryParts.push(`size:${sizesQuery}`);
-      console.log('[PRODUCT SERVICE] Combined size query part added:', `size:${sizesQuery}`);
+      // CRITICAL FIX: E-bebek API duplicate format - size:"1,5 Yaş":size:1,5 Yaş
+      validSizes.forEach(sizeCode => {
+        queryParts.push(`size:"${sizeCode}"`);
+        queryParts.push(`size:${sizeCode}`);
+      });
+      console.log('[PRODUCT SERVICE] Duplicate size query parts added for E-bebek API');
       console.log('[PRODUCT SERVICE] Individual sizes used:', validSizes);
     }
   }
@@ -254,13 +300,12 @@ export class ProductService {
       .map(gender => gender.trim());
     
     if (validGenders.length > 0) {
-      // CRITICAL FIX: Birden fazla gender için tek parametre kullan
-      const gendersQuery = validGenders
-        .map(genderCode => `"${genderCode}"`)
-        .join(':');
-      
-      queryParts.push(`gender:${gendersQuery}`);
-      console.log('[PRODUCT SERVICE] Combined gender query part added:', `gender:${gendersQuery}`);
+      // CRITICAL FIX: E-bebek API duplicate format - gender:"GIRL":gender:GIRL
+      validGenders.forEach(genderCode => {
+        queryParts.push(`gender:"${genderCode}"`);
+        queryParts.push(`gender:${genderCode}`);
+      });
+      console.log('[PRODUCT SERVICE] Duplicate gender query parts added for E-bebek API');
       console.log('[PRODUCT SERVICE] Individual genders used:', validGenders);
     }
   }
@@ -274,13 +319,12 @@ export class ProductService {
       .map(color => color.trim());
     
     if (validColors.length > 0) {
-      // CRITICAL FIX: Birden fazla color için tek parametre kullan
-      const colorsQuery = validColors
-        .map(colorCode => `"${colorCode}"`)
-        .join(':');
-      
-      queryParts.push(`color:${colorsQuery}`);
-      console.log('[PRODUCT SERVICE] Combined color query part added:', `color:${colorsQuery}`);
+      // CRITICAL FIX: E-bebek API duplicate format - color:"0;0;0":color:0;0;0
+      validColors.forEach(colorCode => {
+        queryParts.push(`color:"${colorCode}"`);
+        queryParts.push(`color:${colorCode}`);
+      });
+      console.log('[PRODUCT SERVICE] Duplicate color query parts added for E-bebek API');
       console.log('[PRODUCT SERVICE] Individual colors used:', validColors);
     }
   }
@@ -291,13 +335,15 @@ export class ProductService {
     
     const validRatings = filters.ratings
       .filter(rating => rating && rating > 0)
-      .map(rating => `"${rating}* ve üzeri"`);
+      .map(rating => `${rating}* ve üzeri`); // Tırnak kaldırıldı
     
     if (validRatings.length > 0) {
-      // CRITICAL FIX: Birden fazla rating için tek parametre kullan
-      const ratingsQuery = validRatings.join(':');
-      queryParts.push(`review_rating_star:${ratingsQuery}`);
-      console.log('[PRODUCT SERVICE] Combined rating query part added:', `review_rating_star:${ratingsQuery}`);
+      // CRITICAL FIX: E-bebek API camelCase format - reviewRatingStar
+      validRatings.forEach(ratingValue => {
+        queryParts.push(`reviewRatingStar:${ratingValue}`);
+      });
+      console.log('[PRODUCT SERVICE] Rating query parts added for E-bebek API');
+      console.log('[PRODUCT SERVICE] Individual ratings used:', validRatings);
     }
   }
 
@@ -309,12 +355,18 @@ export class ProductService {
     console.log('[PRODUCT SERVICE] Search query part added:', searchPart);
   }
 
-  // FİYAT ARALIĞI - E-BEBEK API FORMAT: price:[min TO max]
+  // FİYAT ARALIĞI - E-BEBEK API DUPLICATE FORMAT: price:[min TO max]:price:min - max TL
   if (filters.priceRange && filters.priceRange.min !== undefined && filters.priceRange.max !== undefined) {
     console.log('[PRODUCT SERVICE] Adding price range:', filters.priceRange);
-    const pricePart = `price:[${filters.priceRange.min} TO ${filters.priceRange.max}]`;
-    queryParts.push(pricePart);
-    console.log('[PRODUCT SERVICE] Price query part added:', pricePart);
+    const min = filters.priceRange.min;
+    const max = filters.priceRange.max;
+    
+    // CRITICAL FIX: E-bebek API duplicate format
+    queryParts.push(`price:[${min} TO ${max}]`);
+    queryParts.push(`price:${min} - ${max} TL`);
+    
+    console.log('[PRODUCT SERVICE] Duplicate price query parts added for E-bebek API');
+    console.log('[PRODUCT SERVICE] Price range used:', `${min} - ${max}`);
   }
 
   // STOK DURUMU
@@ -326,7 +378,8 @@ export class ProductService {
   // İNDİRİMLİ ÜRÜNLER
   if (filters.onSaleOnly === true) {
     console.log('[PRODUCT SERVICE] Adding sale filter: on sale only');
-    queryParts.push('discountRate:[1 TO *]');
+    // CRITICAL FIX: E-bebek API format - space'leri + ile değiştir
+    queryParts.push('discountRate:[1+TO+*]');
   }
 
   const finalQuery = queryParts.join(':');
@@ -355,12 +408,13 @@ export class ProductService {
 
   private mapSortBy(sortBy?: string): string {
       const sortMap: { [key: string]: string } = {
-        'name': 'name-asc',
+        'relevance': 'relevance',
         'price-asc': 'price-asc',
         'price-desc': 'price-desc',
-        'rating': 'rating-desc',
-        'newest': 'creationtime-desc',
-        'popularity': 'relevance'
+        'mostReviewed': 'mostReviewed',
+        'discount-desc': 'discount-desc',
+        'topFavorites': 'topFavorites',
+        'newlyToOld': 'newlyToOld'
       };
 
       return sortMap[sortBy || 'relevance'] || 'relevance';

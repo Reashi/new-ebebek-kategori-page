@@ -237,5 +237,5 @@ export const DEFAULT_SORT_BY = 'relevance';
 
 // Utility type'lar
 export type FilterKey = keyof ProductFilters;
-export type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'rating' | 'newest' | 'name';
+export type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'mostReviewed' | 'discount-desc' | 'topFavorites' | 'newlyToOld';
 export type ViewMode = 'grid' | 'list';

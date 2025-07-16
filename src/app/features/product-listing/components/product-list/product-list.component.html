@@ -30,6 +30,18 @@
       </div>
     </div>
     
+    <!-- Sıralama Seçenekleri -->
+    <div class="sort-section">
+      <label for="sort-select" class="sort-label">Sıralama:</label>
+      <select id="sort-select" [(ngModel)]="sortBy" (change)="onSortChange()" class="sort-select">
+        <option 
+          *ngFor="let option of sortOptions" 
+          [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+    
     <!-- Products Grid -->
     <div class="products-grid" *ngIf="(products$ | async)?.length; else noProductsFound">
       <div 
