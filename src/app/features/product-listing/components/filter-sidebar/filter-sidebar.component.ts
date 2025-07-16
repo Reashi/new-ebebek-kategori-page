@@ -177,7 +177,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       this.availableSizes = sizeFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
         .map((value: ApiFacetValue) => {
-          console.log(`[SIZE MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          
           
           // CRITICAL FIX: API code'u tamamen temizle ve normalize et
           let cleanCode = value.code;
@@ -185,7 +185,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
           // Eğer API'den gelen code'da URL encoding varsa temizle
           if (cleanCode.includes('%') || cleanCode.includes('+')) {
             cleanCode = decodeURIComponent(cleanCode.replace(/\+/g, ' '));
-            console.log(`[SIZE MAPPING] Decoded API Code: "${cleanCode}"`);
+            
           }
           
           return {
@@ -205,7 +205,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       this.availableGenders = genderFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
         .map((value: ApiFacetValue) => {
-          console.log(`[GENDER MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          
           return {
             id: this.mapGenderCode(value.code), // Backward compatibility
             code: value.code, // API'nin tam olarak beklediği değer - AYNEN KULLAN!
@@ -223,7 +223,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       this.availableColors = colorFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
         .map((value: ApiFacetValue) => {
-          console.log(`[COLOR MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          
           return {
             id: this.mapColorCode(value.code), // Backward compatibility
             code: value.code, // API'nin tam olarak beklediği değer (RGB format) - AYNEN KULLAN!
@@ -237,11 +237,11 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
     // Rating facet'i işle - CODE DEĞERİNİ AYNEN KULLAN
     const ratingFacet = facets.find(f => f.code === 'review_rating_star');
     if (ratingFacet?.values) {
-      console.log('[FILTER SIDEBAR] Rating facet values:', ratingFacet.values);
+      
       this.availableRatings = ratingFacet.values
         .filter((value: ApiFacetValue) => value.name && !value.name.includes('Puansız'))
         .map((value: ApiFacetValue) => {
-          console.log(`[RATING MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          
           return {
             id: String(value.code || this.extractRatingValue(value.name)), // Backward compatibility
             code: value.code || value.name, // API'nin tam olarak beklediği değer - AYNEN KULLAN!
@@ -261,7 +261,7 @@ export class FilterSidebarComponent implements OnInit, OnDestroy {
       this.brands = brandFacet.values
         .filter((value: ApiFacetValue) => value.code && value.name)
         .map((value: ApiFacetValue) => {
-          console.log(`[BRAND MAPPING] API Code: "${value.code}" -> Display Name: "${value.name}"`);
+          
           return {
             id: value.code, // Brand için code değeri direkt kullanılıyor
             name: value.name,

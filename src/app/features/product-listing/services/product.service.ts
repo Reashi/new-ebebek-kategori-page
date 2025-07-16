@@ -143,7 +143,7 @@ export class ProductService {
           console.log('[API RESPONSE] /products/search', response);
           return this.mapApiResponse(response, params);
         }),
-        catchError((error: any) => {
+        catchError((error: unknown) => {
           this.logError('getProducts', error, params);
           return throwError(() => new Error(this.getErrorMessage(error)));
         })
@@ -207,7 +207,7 @@ export class ProductService {
     }
   }
 
-  // MARKA FİLTRESİ - E-BEBEK API FORMAT: brand:id1:id2:id3 (birleşik)
+  // MARKA FİLTRESİ - E-BEBEK API FORMAT: Her brand için ayrı parametre
   if (filters.brandIds && Array.isArray(filters.brandIds) && filters.brandIds.length > 0) {
     console.log('[PRODUCT SERVICE] Adding brand filter:', filters.brandIds);
     
@@ -216,10 +216,11 @@ export class ProductService {
       .map(brandId => brandId.trim());
     
     if (validBrandIds.length > 0) {
-      // CRITICAL FIX: Birden fazla brand için tek parametre kullan
-      const brandsQuery = validBrandIds.join(':');
-      queryParts.push(`brand:${brandsQuery}`);
-      console.log('[PRODUCT SERVICE] Combined brand query part added:', `brand:${brandsQuery}`);
+      // ALTERNATIVE 1: Her brand için ayrı parametre (OR mantığı)
+      validBrandIds.forEach(brandId => {
+        queryParts.push(`brand:${brandId}`);
+      });
+      console.log('[PRODUCT SERVICE] Individual brand query parts added for brands:', validBrandIds);
     }
   }
 
@@ -385,10 +386,7 @@ export class ProductService {
     const headers: { [key: string]: string } = {
       'Content-Type': 'application/json',
       'Accept': 'application/json, text/plain, */*',
-      'platform': 'web',
-      'Referer': 'https://www.e-bebek.com/',
-      'sec-ch-ua-platform': '"macOS"',
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
+      'platform': 'web'
     };
 
     return new HttpHeaders(headers);
@@ -494,18 +492,19 @@ export class ProductService {
     return genderMap[apiCode] || 'unisex';
   }
 
-  private getErrorMessage(error: any): string {
-    if (error.status === 401) {
+  private getErrorMessage(error: unknown): string {
+    const httpError = error as any;
+    if (httpError.status === 401) {
       return 'API yetkilendirme hatası. Lütfen bağlantınızı kontrol ediniz.';
-    } else if (error.status === 403) {
+    } else if (httpError.status === 403) {
       return 'Bu işlem için yetki gerekiyor.';
-    } else if (error.status === 404) {
+    } else if (httpError.status === 404) {
       return 'Aradığınız ürün bulunamadı.';
-    } else if (error.status === 429) {
+    } else if (httpError.status === 429) {
       return 'Çok fazla istek gönderildi. Lütfen biraz bekleyip tekrar deneyiniz.';
-    } else if (error.status >= 500) {
+    } else if (httpError.status >= 500) {
       return 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyiniz.';
-    } else if (error.name === 'TimeoutError') {
+    } else if (httpError.name === 'TimeoutError') {
       return `İstek zaman aşımına uğradı (${this.requestTimeout}ms). Lütfen tekrar deneyiniz.`;
     } else if (!navigator.onLine) {
       return 'İnternet bağlantınızı kontrol ediniz.';
@@ -514,7 +513,7 @@ export class ProductService {
     }
   }
 
-  private logError(method: string, error: any, params?: any): void {
+  private logError(method: string, error: unknown, params?: unknown): void {
     console.error(`ProductService.${method} error:`, {
       error,
       params,
@@ -530,8 +529,8 @@ export class ProductService {
     return this.http.get<EbebekProduct>(url, { headers })
       .pipe(
         timeout(this.requestTimeout),
-        map(ebebekProduct => EbebekProductMapper.mapToProduct(ebebekProduct)),
-        catchError(error => {
+        map((ebebekProduct: EbebekProduct) => EbebekProductMapper.mapToProduct(ebebekProduct)),
+        catchError((error: unknown) => {
           this.logError('getProductById', error, { id });
           return throwError(() => new Error(this.getErrorMessage(error)));
         })
@@ -557,7 +556,7 @@ export class ProductService {
     return this.http.get<any>(url, { headers })
       .pipe(
         timeout(this.requestTimeout),
-        catchError(error => {
+        catchError((error: unknown) => {
           this.logError('getCategories', error);
           return throwError(() => new Error('Kategoriler yüklenirken hata oluştu.'));
         })
@@ -571,7 +570,7 @@ export class ProductService {
     return this.http.get<any>(url, { headers })
       .pipe(
         timeout(this.requestTimeout),
-        catchError(error => {
+        catchError((error: unknown) => {
           this.logError('getBrands', error);
           return throwError(() => new Error('Markalar yüklenirken hata oluştu.'));
         })
