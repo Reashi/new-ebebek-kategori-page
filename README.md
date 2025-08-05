@@ -1,215 +1,170 @@
-# Environment Configuration Guide
+# E-bebek Kategori Sayfası Yeniden Tasarımı
 
-## Overview
-Bu proje farklı ortamlar için farklı konfigürasyonlar kullanır. API anahtarları ve hassas bilgiler environment dosyalarında saklanır.
+## Proje Hakkında
+Bu proje, E-bebek'in kategori sayfasının modern ve kullanıcı dostu bir şekilde yeniden tasarlanmış versiyonudur. Angular framework'ü kullanılarak geliştirilmiştir ve duyarlı (responsive) tasarım prensipleriyle her ekran boyutuna uyum sağlamaktadır.
 
-## Environment Files
+## Özellikler
 
-### 1. `environment.ts` (Development)
-- Development ortamı için varsayılan konfigürasyon
-- Loglama ve debug araçları aktif
-- Development API token'ı içerir
+### 🛍️ Ürün Listeleme
+- Grid ve liste görünüm seçenekleri
+- Sayfalama desteği
+- Yükleme durumu gösterimi
+- Hata durumu yönetimi
+- Görsel odaklı ürün kartları
 
-### 2. `environment.prod.ts` (Production)
-- Production ortamı için konfigürasyon
-- Loglama kapalı, performans odaklı
-- Production API token'ı environment variable'dan alınmalı
+### 🔍 Filtreleme Özellikleri
+- Kategori bazlı filtreleme
+- Fiyat aralığı filtreleme
+- Marka filtreleme
+- Renk seçenekleri
+- Yaş grubu/beden filtreleme
+- Puan bazlı filtreleme
+- Stok durumu filtreleme
+- İndirimli ürün filtreleme
 
-### 3. `environment.local.ts` (Local Development - Git Ignored)
-- Yerel geliştirme için kişisel konfigürasyon
-- Git'e commitlenmez (.gitignore'da)
-- Kişisel API token'ları için güvenli
+### 📊 Sıralama Seçenekleri
+- İsme göre sıralama
+- Fiyat (artan/azalan)
+- Puana göre sıralama
+- En yeni ürünler
+- Çok satanlar
+- En çok değerlendirilenler
+- En yüksek indirim oranı
 
-### 4. `environment.staging.ts` (Staging)
-- Test ortamı için konfigürasyon
-- Production benzeri ayarlar ama test API'si
+### 🧭 Navigasyon
+- Ekmek kırıntısı (breadcrumb) navigasyonu
+- Kategoriler arası kolay geçiş
+- Ana kategoriler için hızlı erişim
 
-## Setup Instructions
+## Teknolojik Altyapı
 
-### Local Development İçin
+### 🛠️ Kullanılan Teknolojiler
+- Angular 17+
+- TypeScript
+- SCSS
+- NgRx (State Management)
+- RxJS
 
-1. `src/environments/environment.local.ts` dosyasını oluşturun:
+### 📦 Bağımlılıklar
+- @angular/core
+- @angular/common
+- @angular/forms
+- @ngrx/store
+- @ngrx/effects
 
+## Kurulum ve Çalıştırma
+
+### Gereksinimler
+- Node.js 18+
+- Angular CLI 17+
+- npm veya yarn
+
+### Kurulum Adımları
+
+1. Projeyi klonlayın:
+```bash
+git clone https://github.com/Reashi/new-ebebek-kategori-page.git
+cd new-ebebek-kategori-page
+```
+
+2. Bağımlılıkları yükleyin:
+```bash
+npm install
+```
+
+3. Geliştirme sunucusunu başlatın:
+```bash
+npm start
+```
+
+Uygulama varsayılan olarak http://localhost:4200 adresinde çalışacaktır.
+
+## Ortam Yapılandırması
+
+### Ortam Dosyaları
+- `environment.ts` - Geliştirme ortamı
+- `environment.prod.ts` - Üretim ortamı
+- `environment.staging.ts` - Test ortamı
+
+### API Yapılandırması
 ```typescript
 export const environment = {
   production: false,
   ebebekApi: {
     baseUrl: 'https://api2.e-bebek.com/ebebekwebservices/v2/ebebek',
-    authToken: 'YOUR_PERSONAL_API_TOKEN_HERE',
     timeout: 30000
-  },
-  features: {
-    enableLogging: true,
-    enableDebugTools: true
   }
 };
 ```
 
-2. Angular CLI konfigürasyonunu güncelleyin (`angular.json`):
+## Geliştirici Kılavuzu
 
-```json
-{
-  "configurations": {
-    "local": {
-      "fileReplacements": [
-        {
-          "replace": "src/environments/environment.ts",
-          "with": "src/environments/environment.local.ts"
-        }
-      ]
-    }
-  }
-}
+### 📂 Proje Yapısı
+```
+src/
+├── app/
+│   ├── features/
+│   │   └── product-listing/
+│   │       ├── components/
+│   │       │   ├── breadcrumb/
+│   │       │   ├── filter-sidebar/
+│   │       │   ├── product-list/
+│   │       │   └── product-list-item/
+│   │       ├── pages/
+│   │       └── product/
+│   ├── shared/
+│   │   └── header/
+│   └── app.component.ts
+└── environments/
 ```
 
-3. Local environment ile çalıştırın:
+### 🔄 State Management
+NgRx kullanılarak yönetilen state'ler:
+- Ürün listesi
+- Filtreler
+- Sıralama
+- Sayfalama
+- Yükleme durumları
+- Hata durumları
+
+## Derleme ve Deployment
+
+### Geliştirme Derlemesi
 ```bash
-ng serve --configuration=local
+ng serve
 ```
 
-### Production İçin
-
-Production'da API token'ı environment variable olarak ayarlayın:
-
+### Üretim Derlemesi
 ```bash
-# Docker
-ENV EBEBEK_API_TOKEN=your_production_token
-
-# Kubernetes
-env:
-  - name: EBEBEK_API_TOKEN
-    valueFrom:
-      secretKeyRef:
-        name: api-secrets
-        key: ebebek-token
-
-# Heroku
-heroku config:set EBEBEK_API_TOKEN=your_production_token
-```
-
-## Security Best Practices
-
-### ✅ DO (Yapılması Gerekenler)
-- API token'ları environment dosyalarında saklayın
-- Sensitive dosyaları `.gitignore`'a ekleyin
-- Production'da environment variable kullanın
-- Token'ları düzenli olarak rotate edin
-
-### ❌ DON'T (Yapılmaması Gerekenler)
-- API token'ları kaynak kodda hardcode etmeyin
-- Sensitive dosyaları Git'e commit etmeyin
-- Token'ları log'larda yazdırmayın
-- Token'ları frontend'de expose etmeyin
-
-## Environment Variables
-
-### Development
-```bash
-EBEBEK_API_TOKEN=dev_token_here
-EBEBEK_API_BASE_URL=https://api2.e-bebek.com/ebebekwebservices/v2/ebebek
-ENABLE_LOGGING=true
-```
-
-### Production
-```bash
-EBEBEK_API_TOKEN=prod_token_here
-EBEBEK_API_BASE_URL=https://api2.e-bebek.com/ebebekwebservices/v2/ebebek
-ENABLE_LOGGING=false
-```
-
-## Build Commands
-
-```bash
-# Development
-ng build
-
-# Production
 ng build --configuration=production
+```
 
-# Staging
+### Test Derlemesi
+```bash
 ng build --configuration=staging
-
-# Local
-ng build --configuration=local
 ```
 
-## Troubleshooting
+## Test
 
-### API Token Hatası
-```
-E-bebek API auth token is not configured. API calls may fail.
-```
-
-**Çözüm**: Environment dosyanızda `authToken` değerini kontrol edin.
-
-### CORS Hatası
-```
-Access to XMLHttpRequest has been blocked by CORS policy
+### Unit Testler
+```bash
+ng test
 ```
 
-**Çözüm**: Proxy konfigürasyonu ekleyin (`proxy.conf.json`):
-
-```json
-{
-  "/api/*": {
-    "target": "https://api2.e-bebek.com",
-    "secure": true,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-}
+### End-to-End Testler
+```bash
+ng e2e
 ```
 
-### Timeout Hatası
-```
-İstek zaman aşımına uğradı (30000ms)
-```
+## Katkıda Bulunma
+1. Fork'layın
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Commit'leyin (`git commit -m 'Add some amazing feature'`)
+4. Branch'e push edin (`git push origin feature/amazing-feature`)
+5. Pull Request açın
 
-**Çözüm**: Environment'da `timeout` değerini artırın.
+## Lisans
+Bu proje MIT lisansı altında lisanslanmıştır.
 
-## Configuration Schema
-
-```typescript
-interface Environment {
-  production: boolean;
-  ebebekApi: {
-    baseUrl: string;
-    authToken: string;
-    timeout: number;
-  };
-  features: {
-    enableLogging: boolean;
-    enableDebugTools: boolean;
-  };
-}
-```
-
-## CI/CD Integration
-
-### GitHub Actions
-```yaml
-env:
-  EBEBEK_API_TOKEN: ${{ secrets.EBEBEK_API_TOKEN }}
-```
-
-### GitLab CI
-```yaml
-variables:
-  EBEBEK_API_TOKEN: $EBEBEK_API_TOKEN
-```
-
-## Monitoring
-
-Production'da API çağrılarını izlemek için:
-
-```typescript
-// Error tracking
-if (environment.production) {
-  // Sentry, LogRocket vb. integration
-}
-
-// Performance monitoring
-if (environment.features.enableLogging) {
-  console.log('API call metrics:', metrics);
-}
-```
+## İletişim
+Proje sorumlusu: E-bebek Development Team
